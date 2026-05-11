@@ -14,6 +14,7 @@ export const showcaseRules: TemplateValidationRules = {
   forbidden: [
     '```markdown',
     '[项目简称 Banner',
+    'via.placeholder.com',
   ],
   maxPlaceholderResidue: 3,
   minLength: 500,
@@ -21,7 +22,7 @@ export const showcaseRules: TemplateValidationRules = {
 
 export const showcaseSkeleton = [
   '<p align="center">',
-  '  <img src="https://via.placeholder.com/900x240/1a1a2e/e0e0e0?text=[项目简称 Banner]" alt="[项目名称] Banner" width="100%" />',
+  '  <img src="https://placehold.co/900x240/1a1a2e/e0e0e0?text=[项目简称 Banner]" alt="[项目名称] Banner" width="100%" />',
   '</p>',
   '',
   '<p align="center">',

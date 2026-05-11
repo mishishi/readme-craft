@@ -78,7 +78,7 @@ const TEMPLATE_STYLE_RULES: Record<string, string> = {
   showcase: `
 ## 专属风格规则（项目展厅）
 
-1. **Banner 保留**：开头的 <p align="center"> 和 <img> Banner 标签必须保留，替换其中的文字内容
+1. **Banner 保留**：开头的 <p align="center"> 和 <img> Banner 标签必须保留，替换其中的文字内容；图片 URL 使用 placehold.co（不要用 via.placeholder.com）
 2. **叙事风格**：「项目简介」必须使用叙事性段落书写项目的缘起、发展和愿景，而非枯燥的功能列表；每个段落控制在 3-5 句话；段落之间用 '---' 分隔
 3. **核心特性**：使用 ### 三级标题 + 描述段落，每个特性独立成节；每个特性描述至少 2 句话
 4. **路线图**：必须保留 checkbox 列表格式，至少包含 3 个规划中和 2 个已完成的功能

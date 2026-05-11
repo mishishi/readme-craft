@@ -8,7 +8,7 @@ import RepoInfoCard from './components/RepoInfoCard';
 import TemplateSelector from './components/TemplateSelector';
 import GenerateSection from './components/GenerateSection';
 import ShowcaseSection from './components/ShowcaseSection';
-import Modal from './components/Modal';
+import ConfirmBackModal from './components/ConfirmBackModal';
 import EditWorkspace from './components/EditWorkspace';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import AdminLayout from './components/AdminLayout';
@@ -80,95 +80,16 @@ function RequireContent({ children }: { children: React.ReactNode }) {
 }
 
 function HomePage() {
-  const { state, dispatch } = useApp();
-  const [phase, setPhase] = useState<'input' | 'edit'>('input');
-  const [editFeedback, setEditFeedback] = useState(false);
-  const [showBackConfirm, setShowBackConfirm] = useState(false);
-
-  const handleGenerated = () => {
-    setPhase('edit');
-    setEditFeedback(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBackToInput = () => {
-    const hasContent = state.sections.some(s => s.content.trim());
-    if (hasContent) {
-      setShowBackConfirm(true);
-    } else {
-      dispatch({ type: 'CLEAR_CONTENT' });
-      setPhase('input');
-      setEditFeedback(false);
-    }
-  };
-
-  const confirmBackToInput = () => {
-    dispatch({ type: 'CLEAR_CONTENT' });
-    setShowBackConfirm(false);
-    setPhase('input');
-    setEditFeedback(false);
-  };
-
   return (
     <section>
-      {/* Input phase */}
-      <div
-        className={`transition-all duration-500 ease-out ${
-          phase === 'edit'
-            ? 'pointer-events-none max-h-0 -translate-y-4 opacity-0 overflow-hidden'
-            : 'max-h-[4000px] translate-y-0 opacity-100'
-        }`}
-      >
-        <HeroSection />
-        <ShowcaseSection />
-        <div className="mx-auto mt-6 max-w-2xl">
-          <RepoInput disabled={false} />
-          <RepoInfoCard />
-        </div>
-        <TemplateSelector />
-        <GenerateSection onGenerated={handleGenerated} />
+      <HeroSection />
+      <ShowcaseSection />
+      <div className="mx-auto mt-6 max-w-2xl">
+        <RepoInput disabled={false} />
+        <RepoInfoCard />
       </div>
-
-      {/* Edit phase */}
-      {state.sections.length > 0 && phase === 'edit' && (
-        <>
-          <div
-            className={`mb-6 text-center transition-all duration-500 delay-200 ease-out ${
-              phase === 'edit'
-                ? 'translate-y-0 opacity-100'
-                : 'translate-y-4 opacity-0'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-3">
-              <h2 className="text-lg font-semibold text-gray-900">编辑 & 预览</h2>
-              <button
-                onClick={handleBackToInput}
-                className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600"
-              >
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>
-                返回选择模板
-              </button>
-            </div>
-            <p className="mt-1 text-sm text-gray-500">
-              调整标题和章节内容，右侧实时预览效果
-            </p>
-          </div>
-          <EditWorkspace fromGeneration={editFeedback} />
-        </>
-      )}
-
-      <Modal
-        open={showBackConfirm}
-        onClose={() => setShowBackConfirm(false)}
-        onConfirm={confirmBackToInput}
-        title="确认返回"
-        confirmText="确认返回"
-        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-amber-700"
-      >
-        <p className="mb-6 text-sm text-gray-500">返回将丢失当前编辑内容，确定继续？</p>
-      </Modal>
+      <TemplateSelector />
+      <GenerateSection />
     </section>
   );
 }
@@ -215,16 +136,11 @@ function EditorPage() {
       </div>
       <EditWorkspace />
 
-      <Modal
+      <ConfirmBackModal
         open={showBackConfirm}
         onClose={() => setShowBackConfirm(false)}
         onConfirm={confirmBack}
-        title="确认返回"
-        confirmText="确认返回"
-        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-amber-700"
-      >
-        <p className="mb-6 text-sm text-gray-500">返回将丢失当前编辑内容，确定继续？</p>
-      </Modal>
+      />
     </section>
   );
 }

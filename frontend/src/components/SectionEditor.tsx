@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
+import Modal from './Modal';
 import type { Section } from '../types';
 
 interface Props {
@@ -21,75 +22,6 @@ const TOOLS = [
   { label: '-', action: 'list', title: '列表 - 项目' },
 ];
 
-function DeleteConfirmModal({
-  heading,
-  onConfirm,
-  onCancel,
-}: {
-  heading: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onCancel(); return; }
-      if (e.key !== 'Tab') return;
-      const modal = modalRef.current;
-      if (!modal) return;
-      const focusable = modal.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    requestAnimationFrame(() => {
-      const cancelBtn = modalRef.current?.querySelector<HTMLButtonElement>('button');
-      cancelBtn?.focus();
-    });
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
-
-  return (
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="确认删除章节"
-    >
-      <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <h3 className="mb-2 text-base font-semibold text-gray-900">确认删除</h3>
-        <p className="mb-6 text-sm text-gray-500">确定要删除「{heading || '未命名章节'}」吗？当前编辑内容将丢失。</p>
-        <div className="flex justify-end gap-3">
-          <button onClick={onCancel} className="btn-secondary text-sm">取消</button>
-          <button
-            onClick={onConfirm}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-700"
-          >
-            确认删除
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function SectionEditor({ section, isFirst, isLast, total, sectionIndex, onDragStart }: Props) {
   const { state, dispatch } = useApp();
   const isCollapsed = state.collapsedSections.includes(section.id);
@@ -98,14 +30,12 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
   const [headingDraft, setHeadingDraft] = useState(section.heading);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const headingInputRef = useRef<HTMLInputElement>(null);
-  const deleteTriggerRef = useRef<HTMLElement | null>(null);
 
   const handleChange = (content: string) => {
     dispatch({ type: 'UPDATE_SECTION', payload: { id: section.id, content } });
   };
 
   const handleDelete = () => {
-    deleteTriggerRef.current = document.activeElement as HTMLElement;
     if (section.content.trim()) {
       setShowDeleteConfirm(true);
     } else {
@@ -115,7 +45,6 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
 
   const closeDeleteModal = useCallback(() => {
     setShowDeleteConfirm(false);
-    requestAnimationFrame(() => deleteTriggerRef.current?.focus());
   }, []);
 
   const confirmDelete = () => {
@@ -403,13 +332,16 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
         </div>
       )}
 
-      {showDeleteConfirm && (
-        <DeleteConfirmModal
-          heading={section.heading}
-          onConfirm={() => { confirmDelete(); requestAnimationFrame(() => deleteTriggerRef.current?.focus()); }}
-          onCancel={closeDeleteModal}
-        />
-      )}
+      <Modal
+        open={showDeleteConfirm}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        title="确认删除"
+        confirmText="确认删除"
+        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-700"
+      >
+        <p className="text-sm text-gray-500">确定要删除「{section.heading || '未命名章节'}」吗？当前编辑内容将丢失。</p>
+      </Modal>
     </div>
   );
 }

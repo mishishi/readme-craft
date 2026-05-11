@@ -153,7 +153,7 @@ ${styleRules}
 ${skeleton}`;
 }
 
-export function buildUserPrompt(repo: RepoInfo, projectContext?: string): string {
+export function buildUserPrompt(repo: RepoInfo, projectContext?: string, feedback?: string): string {
   const base = `## 项目信息
 
 请根据以下 GitHub 项目信息来填充 README。
@@ -168,8 +168,10 @@ export function buildUserPrompt(repo: RepoInfo, projectContext?: string): string
 | 作者 | ${repo.owner} |
 | 许可证 | ${repo.license || '未指定'}`;
 
+  let result = base;
+
   if (projectContext) {
-    return `${base}
+    result += `
 
 ## 项目源码分析
 
@@ -180,5 +182,20 @@ ${projectContext}
 **重要**: 使用上述项目信息生成内容。内容要有实际依据（从源码分析的依赖、脚本、目录结构中提取），不要编造。保留骨架结构不变。`;
   }
 
-  return base;
+  if (feedback) {
+    result += `
+
+## 用户改进要求
+
+用户对上一次生成的内容不满意，提出了以下改进要求。请**严格根据这些要求调整 README 内容**：
+
+${feedback}
+
+注意：
+- 基于之前的生成结果进行修改，保留符合要求的部分
+- 只修改用户提到的部分，不需要重写整个 README
+- 保持模板结构和风格不变`;
+  }
+
+  return result;
 }

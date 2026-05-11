@@ -5,6 +5,7 @@ interface GenerateRequest {
   repoUrl: string;
   templateId: string;
   repoInfo: RepoInfo;
+  feedback?: string;
 }
 
 interface GenerateResponse {

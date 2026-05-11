@@ -22,6 +22,9 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
   );
   const [regenerating, setRegenerating] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+  const [feedbackCycle, setFeedbackCycle] = useState(0);
 
   const sectionCount = state.sections.length;
   const templateName = templates.find((t) => t.id === state.selectedTemplate)?.name;
@@ -30,17 +33,15 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
 
   const fromGeneration = Boolean(propFrom ?? (location.state as Record<string, unknown>)?.fromGeneration);
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
-  const feedbackShownRef = useRef(false);
 
-  // Auto-dismiss feedback after 10s
+  // Auto-dismiss feedback after 10s (resets on each feedback cycle)
   useEffect(() => {
-    if (!fromGeneration || feedbackShownRef.current) return;
-    feedbackShownRef.current = true;
+    if (!fromGeneration) return;
     const timer = setTimeout(() => setFeedbackDismissed(true), 10_000);
     return () => clearTimeout(timer);
-  }, [fromGeneration]);
+  }, [fromGeneration, feedbackCycle]);
 
-  const handleRegenerate = useCallback(async () => {
+  const handleRegenerate = useCallback(async (feedback?: string) => {
     if (!state.selectedTemplate || !state.repoInfo || regenerating) return;
 
     abortRef.current = new AbortController();
@@ -51,6 +52,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
         repoUrl: state.repoUrl,
         templateId: state.selectedTemplate,
         repoInfo: state.repoInfo,
+        feedback,
       }, abortRef.current.signal);
 
       const { preamble, sections } = parseSections(markdown);
@@ -66,8 +68,11 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
       });
       dispatch({
         type: 'SHOW_TOAST',
-        payload: { message: 'README 已重新生成', type: 'success' },
+        payload: { message: feedback ? '已根据反馈更新 README' : 'README 已重新生成', type: 'success' },
       });
+      // 重新显示反馈条
+      setFeedbackDismissed(false);
+      setFeedbackCycle(c => c + 1);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       dispatch({
@@ -77,49 +82,121 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
     } finally {
       setRegenerating(false);
     }
-  }, [state.selectedTemplate, state.repoInfo, state.repoUrl, state.title, regenerating, dispatch]);
+  }, [state.selectedTemplate, state.repoInfo, state.repoUrl, regenerating, dispatch]);
+
+  const handleFeedbackSubmit = useCallback(async () => {
+    if (!feedbackText.trim() || regenerating) return;
+    await handleRegenerate(feedbackText.trim());
+    setFeedbackText('');
+    setShowFeedbackInput(false);
+  }, [feedbackText, regenerating, handleRegenerate]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-100">
-      {/* 生成反馈 */}
+      {/* 生成反馈 — 迭代闭环 */}
       {fromGeneration && !feedbackDismissed && (
-        <div className="flex items-center justify-center gap-4 border-b border-indigo-100 bg-indigo-50/80 px-4 py-2 text-sm text-gray-600">
-          <span>这个 README 符合你的预期吗？</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                trackEvent('feedback', { rating: 'positive' });
-                setFeedbackDismissed(true);
-              }}
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.71 10.346 4.77 9.73 5.904 9.73c.583 0 1.131.128 1.62.352" />
-              </svg>
-              符合预期
-            </button>
-            <button
-              onClick={() => {
-                trackEvent('feedback', { rating: 'negative' });
-                setFeedbackDismissed(true);
-              }}
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25m8.024-9.75c.011.05.028.1.052.148.591 1.2.924 2.55.924 3.977a8.96 8.96 0 01-.999 4.125m.023-8.25c-.076-.365.183-.75.575-.75h.908c.889 0 1.713.518 1.972 1.368.339 1.11.521 2.287.521 3.507 0 1.553-.295 3.036-.831 4.398C20.29 15.154 19.23 15.77 18.096 15.77c-.583 0-1.131-.128-1.62-.352m0 0a8.937 8.937 0 01-1.428-.882m0 0l-3.182-3.182m3.182 3.182l3.182-3.182m0 0a9.234 9.234 0 01-1.834-1.962m1.834 1.962l-1.834-1.962m-7.748 3.787l3.107-3.107m0 0l3.107-3.107M3.75 3.75l18 18" />
-              </svg>
-              需要改进
-            </button>
-          </div>
-          <button
-            onClick={() => setFeedbackDismissed(true)}
-            className="text-gray-400 transition-colors hover:text-gray-600"
-            aria-label="关闭"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div className="border-b border-indigo-100 bg-indigo-50/80 px-4 py-3 text-sm text-gray-600">
+          {!showFeedbackInput ? (
+            /* 初始反馈按钮 */
+            <div className="flex items-center justify-center gap-4">
+              <span>这个 README 符合你的预期吗？</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    trackEvent('feedback', { rating: 'positive' });
+                    setFeedbackDismissed(true);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-100"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.71 10.346 4.77 9.73 5.904 9.73c.583 0 1.131.128 1.62.352" />
+                  </svg>
+                  符合预期
+                </button>
+                <button
+                  onClick={() => {
+                    trackEvent('feedback', { rating: 'negative' });
+                    setShowFeedbackInput(true);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25m8.024-9.75c.011.05.028.1.052.148.591 1.2.924 2.55.924 3.977a8.96 8.96 0 01-.999 4.125m.023-8.25c-.076-.365.183-.75.575-.75h.908c.889 0 1.713.518 1.972 1.368.339 1.11.521 2.287.521 3.507 0 1.553-.295 3.036-.831 4.398C20.29 15.154 19.23 15.77 18.096 15.77c-.583 0-1.131-.128-1.62-.352m0 0a8.937 8.937 0 01-1.428-.882m0 0l-3.182-3.182m3.182 3.182l3.182-3.182m0 0a9.234 9.234 0 01-1.834-1.962m1.834 1.962l-1.834-1.962m-7.748 3.787l3.107-3.107m0 0l3.107-3.107M3.75 3.75l18 18" />
+                  </svg>
+                  需要改进
+                </button>
+              </div>
+              <button
+                onClick={() => setFeedbackDismissed(true)}
+                className="text-gray-400 transition-colors hover:text-gray-600"
+                aria-label="关闭"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            /* 反馈输入区 */
+            <div className="mx-auto max-w-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-xs font-medium text-indigo-700">
+                  请描述你希望改进的内容：
+                </label>
+                <span className="text-[10px] text-indigo-400">
+                  基于你的反馈重新生成
+                </span>
+              </div>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="例如：增加更多 API 使用示例、调整技术栈描述的顺序、添加贡献指南…"
+                className="w-full rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+                rows={3}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    handleFeedbackSubmit();
+                  }
+                }}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-[10px] text-gray-400">
+                  <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 font-mono text-[9px]">⌘↵</kbd> 快速发送
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setShowFeedbackInput(false); setFeedbackText(''); }}
+                    className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-700"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleFeedbackSubmit}
+                    disabled={regenerating || !feedbackText.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {regenerating ? (
+                      <>
+                        <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        提交反馈并重新生成
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -163,7 +240,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
 
         {/* 重新生成按钮 */}
         <button
-          onClick={handleRegenerate}
+          onClick={() => handleRegenerate()}
           disabled={regenerating}
           className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50"
           title="重新生成 README 内容"

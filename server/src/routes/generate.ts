@@ -39,6 +39,7 @@ const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
 interface GenerateBody {
   repoUrl: string;
   templateId: string;
+  feedback?: string;
   repoInfo: {
     name: string;
     description: string;
@@ -53,7 +54,7 @@ interface GenerateBody {
 
 export async function generateRoutes(app: FastifyInstance) {
   app.post<{ Body: GenerateBody }>('/generate-readme', async (request, reply) => {
-    const { repoUrl, templateId, repoInfo } = request.body;
+    const { repoUrl, templateId, repoInfo, feedback } = request.body;
 
     if (!repoUrl || !templateId || !repoInfo?.name) {
       return reply.status(400).send({ error: '缺少必要参数' });
@@ -87,7 +88,7 @@ export async function generateRoutes(app: FastifyInstance) {
         }
       }
 
-      const userPrompt = buildUserPrompt(repoInfo, projectContext);
+      const userPrompt = buildUserPrompt(repoInfo, projectContext, feedback);
 
       // --- 第一次生成 ---
       let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));

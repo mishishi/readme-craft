@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { getEntries } from '../services/history';
-import Modal from './Modal';
+import ConfirmBackModal from './ConfirmBackModal';
 import HistoryPanel from './HistoryPanel';
 
 export default function Header() {
@@ -92,16 +92,11 @@ export default function Header() {
         </div>
       </header>
 
-      <Modal
+      <ConfirmBackModal
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmBack}
-        title="确认返回"
-        confirmText="确认返回"
-        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-amber-700"
-      >
-        <p className="mb-6 text-sm text-gray-500">当前编辑内容将丢失，确定要返回吗？</p>
-      </Modal>
+      />
 
       <HistoryPanel
         open={historyOpen}

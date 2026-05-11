@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
+import RepoPreview from './RepoPreview';
 import { trackEvent } from '../services/tracking';
 
 /** 每个模板的 Markdown 风格预览 — 展示实际排版结构和视觉风格 */
@@ -225,7 +226,11 @@ export default function TemplateSelector() {
                 </span>
               </div>
               <div className="mt-2">
-                <TemplatePreview id={t.id} accent={t.preview.accent} />
+                {state.repoInfo ? (
+                  <RepoPreview repoInfo={state.repoInfo} templateId={t.id} />
+                ) : (
+                  <TemplatePreview id={t.id} accent={t.preview.accent} />
+                )}
               </div>
             </div>
 

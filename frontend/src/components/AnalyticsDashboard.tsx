@@ -3,14 +3,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-
-const TEMPLATE_NAMES: Record<string, string> = {
-  minimal: '极简清风',
-  badges: 'Badge 大满贯',
-  enterprise: '企业蓝图',
-  cards: '卡片视界',
-  showcase: '项目展厅',
-};
+import { templates } from '../templates';
 
 interface Stats {
   totalEvents: number;
@@ -129,7 +122,7 @@ export default function AnalyticsDashboard() {
   if (!stats || stats.totalEvents === 0) return <EmptyState />;
 
   const templateData = stats.templatePopularity.map((t) => ({
-    name: TEMPLATE_NAMES[t.templateId] || t.templateId,
+    name: templates.find((tm) => tm.id === t.templateId)?.name || t.templateId,
     count: t.count,
   }));
 

@@ -108,7 +108,7 @@ export default function HistoryPanel({ open, onClose }: HistoryPanelProps) {
   const handleRestore = (entry: HistoryEntry) => {
     dispatch({
       type: 'RESTORE_FROM_HISTORY',
-      payload: { title: entry.title, preamble: entry.preamble, sections: entry.sections },
+      payload: { title: entry.title, preamble: entry.preamble, sections: entry.sections, templateId: entry.templateId },
     });
     onClose();
     navigate('/editor');

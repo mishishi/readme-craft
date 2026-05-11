@@ -154,6 +154,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         title: action.payload.title,
         preamble: action.payload.preamble,
         sections: action.payload.sections,
+        selectedTemplate: action.payload.templateId,
         history: [],
         historyIndex: -1,
       };

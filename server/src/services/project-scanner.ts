@@ -69,11 +69,43 @@ async function fetchGitHubTree(
   branch: string
 ): Promise<GitHubTreeItem[]> {
   try {
-    const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-    const res = await fetchWithTimeout(url, { headers: getHeaders() });
+    // Step 1: Fetch root tree (shallow — no recursive param)
+    const rootUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}`;
+    const res = await fetchWithTimeout(rootUrl, { headers: getHeaders() });
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.tree || [];
+    const rootData = await res.json();
+    const items: GitHubTreeItem[] = rootData.tree || [];
+
+    // Step 2: Identify interesting subdirectories from root and fetch their trees recursively
+    const interestingDirs = new Set(['src', 'lib', 'app', 'cmd', 'packages', 'api', 'client', 'server']);
+    const subTreeShas: { path: string; sha: string }[] = [];
+    for (const raw of rootData.tree || []) {
+      if (raw.type === 'tree' && raw.sha && interestingDirs.has(raw.path)) {
+        subTreeShas.push({ path: raw.path, sha: raw.sha });
+      }
+    }
+
+    if (subTreeShas.length > 0) {
+      const subResults = await Promise.all(
+        subTreeShas.map(async ({ path, sha }) => {
+          try {
+            const subUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${sha}?recursive=1`;
+            const subRes = await fetchWithTimeout(subUrl, { headers: getHeaders() });
+            if (!subRes.ok) return [];
+            const subData = await subRes.json();
+            return (subData.tree || []).map((t: any) => ({
+              path: `${path}/${t.path}`,
+              type: t.type,
+            }));
+          } catch {
+            return [];
+          }
+        })
+      );
+      items.push(...subResults.flat());
+    }
+
+    return items;
   } catch {
     return [];
   }

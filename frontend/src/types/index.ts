@@ -83,4 +83,4 @@ export type AppAction =
   | { type: 'SET_COLLAPSED'; payload: { id: string; collapsed: boolean } }
   | { type: 'UNDO' }
   | { type: 'REDO' }
-  | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[] } };
+  | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[]; templateId: string } };

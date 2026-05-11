@@ -99,41 +99,51 @@ export async function generateRoutes(app: FastifyInstance) {
         const validation = validateOutput(markdown, rules, templateId);
 
         if (!validation.valid) {
-          console.log(`[validate] ${templateId} — 验证失败 (${validation.issues.length} 项), 尝试修正...`);
+          // 区分关键问题 vs 轻微问题：仅关键问题才触发重生成
+          const criticalIssues = validation.issues.filter(
+            (i) => !i.startsWith('内容过短')
+          );
+          const skippedIssues = validation.issues.length - criticalIssues.length;
 
-          const refinePrompt = buildRefinePrompt(templateId, validation.issues);
+          if (criticalIssues.length === 0) {
+            console.log(`[validate] ${templateId} — 仅 ${skippedIssues} 项轻微问题 (minLength)，跳过修正`);
+          } else {
+            console.log(`[validate] ${templateId} — ${criticalIssues.length} 项关键问题 (+${skippedIssues} 项轻微), 尝试修正...`);
 
-          try {
-            const refinedMarkdown = cleanMarkdown(
-              await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt)
-            );
-            const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
-            refined = true;
-            markdown = refinedMarkdown;
+            const refinePrompt = buildRefinePrompt(templateId, criticalIssues);
 
-            console.log(
-              `[validate] ${templateId} — 修正${refinedValidation.valid ? '通过' : '完成但仍有问题'}`
-              + ` (${refinedValidation.issues.length} 项残留)`
-            );
+            try {
+              const refinedMarkdown = cleanMarkdown(
+                await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt)
+              );
+              const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
+              refined = true;
+              markdown = refinedMarkdown;
 
-            // 记录验证结果
-            trackEvent({
-              name: 'validation_result',
-              timestamp: Date.now(),
-              data: {
-                templateId,
-                firstTryIssues: validation.issues,
-                retryPassed: refinedValidation.valid,
-                retryRemainingIssues: refinedValidation.issues,
-              },
-            }).catch(() => {});
-          } catch (refineErr) {
-            console.warn('[validate] 修正调用失败，使用原始结果:', refineErr);
-            trackEvent({
-              name: 'validation_refine_failed',
-              timestamp: Date.now(),
-              data: { templateId, error: String(refineErr) },
-            }).catch(() => {});
+              console.log(
+                `[validate] ${templateId} — 修正${refinedValidation.valid ? '通过' : '完成但仍有问题'}`
+                + ` (${refinedValidation.issues.length} 项残留)`
+              );
+
+              // 记录验证结果
+              trackEvent({
+                name: 'validation_result',
+                timestamp: Date.now(),
+                data: {
+                  templateId,
+                  firstTryIssues: validation.issues,
+                  retryPassed: refinedValidation.valid,
+                  retryRemainingIssues: refinedValidation.issues,
+                },
+              }).catch(() => {});
+            } catch (refineErr) {
+              console.warn('[validate] 修正调用失败，使用原始结果:', refineErr);
+              trackEvent({
+                name: 'validation_refine_failed',
+                timestamp: Date.now(),
+                data: { templateId, error: String(refineErr) },
+              }).catch(() => {});
+            }
           }
         }
       }

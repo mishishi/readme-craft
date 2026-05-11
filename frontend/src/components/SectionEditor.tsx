@@ -10,6 +10,7 @@ interface Props {
   total: number;
   sectionIndex: number;
   onDragStart: (idx: number) => void;
+  isChanged?: boolean;
 }
 
 const TOOLS = [
@@ -22,7 +23,7 @@ const TOOLS = [
   { label: '-', action: 'list', title: '列表 - 项目' },
 ];
 
-export default function SectionEditor({ section, isFirst, isLast, total, sectionIndex, onDragStart }: Props) {
+export default function SectionEditor({ section, isFirst, isLast, total, sectionIndex, onDragStart, isChanged }: Props) {
   const { state, dispatch } = useApp();
   const isCollapsed = state.collapsedSections.includes(section.id);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -169,7 +170,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
 
   return (
     <div
-      className={`rounded-lg border bg-white transition-shadow hover:shadow-sm ${isCollapsed ? 'border-dashed border-gray-300' : 'border-gray-200'}`}
+      className={`rounded-lg border transition-all hover:shadow-sm ${isChanged ? 'bg-yellow-50 ring-2 ring-yellow-300' : 'bg-white'} ${isCollapsed ? 'border-dashed border-gray-300' : 'border-gray-200'}`}
       onClick={handleSectionFocus}
     >
       {/* 章节标题栏 */}

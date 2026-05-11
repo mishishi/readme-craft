@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generateReadme } from '../services/api';
-import { parseSections } from '../services/markdown';
+import { assembleMarkdown, parseSections } from '../services/markdown';
 import { templates } from '../templates';
 import Modal from './Modal';
 import RepoPreview from './RepoPreview';
@@ -23,8 +23,11 @@ export default function GenerateSection() {
   const [statusIdx, setStatusIdx] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
+  const [showResult, setShowResult] = useState(false);
+  const [copying, setCopying] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setShowPulse(false), 3000);
@@ -50,6 +53,65 @@ export default function GenerateSection() {
     };
   }, [state.generating]);
 
+  const getMarkdown = useCallback(
+    () => assembleMarkdown(state.title, state.preamble, state.sections),
+    [state.title, state.preamble, state.sections]
+  );
+
+  const handleCopyFromResult = useCallback(async () => {
+    const text = getMarkdown();
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopying(false);
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: '已复制到剪贴板', type: 'success' },
+      });
+    }, 300);
+  }, [getMarkdown, dispatch]);
+
+  const handleDownloadFromResult = useCallback(() => {
+    const text = getMarkdown();
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${state.title || 'README'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    dispatch({
+      type: 'SHOW_TOAST',
+      payload: { message: 'README 已下载', type: 'success' },
+    });
+  }, [getMarkdown, state.title, dispatch]);
+
+  const handleEnterEditor = useCallback(() => {
+    navigate('/editor', { state: { fromGeneration: true } });
+  }, [navigate]);
+
+  const handleSwitchTemplate = useCallback(() => {
+    setShowResult(false);
+    setError(null);
+    document.getElementById('template-selector')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const template = state.selectedTemplate ? templates.find((t) => t.id === state.selectedTemplate) : null;
+  const sectionCount = state.sections.length;
   const canGenerate = state.selectedTemplate && state.repoInfo;
 
   const handleCancel = useCallback(() => {
@@ -68,6 +130,7 @@ export default function GenerateSection() {
 
     dispatch({ type: 'GENERATE_START' });
     setError(null);
+    setShowResult(false);
     trackEvent('generation_started', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName });
 
     try {
@@ -91,10 +154,10 @@ export default function GenerateSection() {
       });
       dispatch({
         type: 'SHOW_TOAST',
-        payload: { message: 'README 生成成功，已跳转到编辑页面', type: 'success' },
+        payload: { message: 'README 生成成功', type: 'success' },
       });
       trackEvent('generation_succeeded', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName, sectionCount: sections.length });
-      navigate('/editor', { state: { fromGeneration: true } });
+      setShowResult(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         return; // 用户取消，不做任何处理
@@ -147,6 +210,104 @@ export default function GenerateSection() {
             </svg>
             取消生成
           </button>
+        </div>
+      ) : showResult && sectionCount > 0 ? (
+        /* 生成结果摘要卡片 */
+        <div className="mx-auto max-w-lg text-left">
+          <div className="overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-sm ring-1 ring-emerald-50">
+            {/* 头部 */}
+            <div className="flex items-center gap-3 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-5 py-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">README 已生成</h3>
+                <p className="text-xs text-gray-500">
+                  {template?.name || '未知模板'} · {sectionCount} 章节
+                  {state.repoInfo?.language && <span> · {state.repoInfo.language}</span>}
+                </p>
+              </div>
+            </div>
+
+            {/* 仓库信息 */}
+            <div className="border-b border-gray-100 px-5 py-3">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+                <span className="font-medium text-gray-700">{state.repoInfo?.fullName}</span>
+                {state.repoInfo?.license && (
+                  <><span className="text-gray-300">·</span>{state.repoInfo.license}</>
+                )}
+                {state.repoInfo?.stars != null && state.repoInfo.stars > 0 && (
+                  <><span className="text-gray-300">·</span>⭐ {state.repoInfo.stars}</>
+                )}
+              </div>
+            </div>
+
+            {/* 章节预览 */}
+            <div className="border-b border-gray-100 px-5 py-3">
+              <span className="mb-2 block text-[10px] font-medium uppercase tracking-wider text-gray-400">章节预览</span>
+              <div className="max-h-32 space-y-1 overflow-y-auto">
+                {state.sections.map((s, i) => (
+                  <div key={s.id} className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="shrink-0 w-4 text-right text-[10px] text-gray-300">{i + 1}</span>
+                    <span className="truncate">{s.heading || '未命名章节'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="flex flex-wrap items-center gap-2 px-5 py-4">
+              <button
+                onClick={handleEnterEditor}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+                进入编辑
+              </button>
+              <button
+                onClick={handleCopyFromResult}
+                disabled={copying}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              >
+                {copying ? (
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                  </svg>
+                )}
+                复制
+              </button>
+              <button
+                onClick={handleDownloadFromResult}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                下载 .md
+              </button>
+              <button
+                onClick={handleSwitchTemplate}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                </svg>
+                换模板重试
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <>

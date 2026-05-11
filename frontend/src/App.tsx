@@ -80,10 +80,11 @@ function RequireContent({ children }: { children: React.ReactNode }) {
 }
 
 function HomePage() {
+  const { state } = useApp();
   return (
     <section>
       <HeroSection />
-      <ShowcaseSection />
+      {!state.repoUrl && <ShowcaseSection />}
       <div className="mx-auto mt-6 max-w-2xl">
         <RepoInput disabled={false} />
         <RepoInfoCard />

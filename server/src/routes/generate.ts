@@ -60,8 +60,8 @@ export async function generateRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: '缺少必要参数' });
     }
 
-    // Check cache
-    if (repoInfo.owner && repoInfo.name) {
+    // Check cache (skip when user provides feedback — must generate fresh)
+    if (!feedback && repoInfo.owner && repoInfo.name) {
       const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
       const cached = generateCache.get(cacheKey);
       if (cached && Date.now() < cached.expiresAt) {

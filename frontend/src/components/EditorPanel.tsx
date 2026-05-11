@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import SectionEditor from './SectionEditor';
 
@@ -7,7 +7,11 @@ interface DragOverState {
   position: 'before' | 'after';
 }
 
-export default function EditorPanel() {
+interface EditorPanelProps {
+  diffSectionIds?: Set<string>;
+}
+
+export default function EditorPanel({ diffSectionIds }: EditorPanelProps) {
   const { state, dispatch } = useApp();
   const sectionCount = state.sections.length;
   const [dragOver, setDragOver] = useState<DragOverState | null>(null);
@@ -40,6 +44,17 @@ export default function EditorPanel() {
       dispatch({ type: 'MOVE_SECTION_TO', payload: { id, toIndex } });
     }
   }, [dispatch]);
+
+  // Scroll to section when activeSectionId changes (e.g. from preview click)
+  useEffect(() => {
+    if (!state.activeSectionId) return;
+    const el = document.querySelector(`[data-section-id="${state.activeSectionId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-indigo-400', 'ring-offset-2', 'rounded-lg', 'transition-all', 'duration-1000');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-400', 'ring-offset-2'), 2000);
+    }
+  }, [state.activeSectionId]);
 
   return (
     <div>
@@ -103,6 +118,7 @@ export default function EditorPanel() {
             state.sections.map((section, idx) => (
               <div
                 key={section.id}
+                data-section-id={section.id}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, idx)}
@@ -122,6 +138,7 @@ export default function EditorPanel() {
                     total={sectionCount}
                     sectionIndex={idx}
                     onDragStart={handleDragStart}
+                    isChanged={diffSectionIds?.has(section.id)}
                   />
                 </div>
                 {dragOver?.index === idx && dragOver.position === 'after' && (

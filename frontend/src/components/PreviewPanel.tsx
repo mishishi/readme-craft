@@ -61,7 +61,7 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 }
 
 export default function PreviewPanel() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const previewRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,11 +191,18 @@ export default function PreviewPanel() {
                 if (typeof children === 'string') text = children;
                 else if (Array.isArray(children)) text = children.map((c: any) => typeof c === 'string' ? c : '').join('');
                 const id = slugify(text);
+                const matchingSection = state.sections.find((s) => s.heading === text);
+                const handleHeadingClick = () => {
+                  if (matchingSection) {
+                    dispatch({ type: 'SET_ACTIVE_SECTION', payload: matchingSection.id });
+                  }
+                };
                 return (
-                  <h2 id={id} {...props} className="group flex items-center gap-2">
+                  <h2 id={id} {...props} className="group flex items-center gap-2 cursor-pointer" onClick={handleHeadingClick}>
                     <span>{children}</span>
                     <a
                       href={`#${id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="text-indigo-400 opacity-0 transition-opacity group-hover:opacity-100 no-underline text-sm font-normal"
                       aria-label={`${text} 的链接`}
                     >

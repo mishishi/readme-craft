@@ -37,12 +37,13 @@ export interface AppState {
   generating: boolean;
   generateError: string | null;
   title: string;
+  preamble: string;
   sections: Section[];
   toast: { id?: string; message: string; type: 'success' | 'error' } | null;
   toasts: { id: string; message: string; type: 'success' | 'error' }[];
   activeSectionId: string | null;
   collapsedSections: string[];
-  history: { title: string; sections: Section[] }[];
+  history: { title: string; preamble: string; sections: Section[] }[];
   historyIndex: number;
 }
 
@@ -53,7 +54,7 @@ export type AppAction =
   | { type: 'FETCH_REPO_ERROR'; payload: string }
   | { type: 'SELECT_TEMPLATE'; payload: string }
   | { type: 'GENERATE_START' }
-  | { type: 'GENERATE_SUCCESS'; payload: { title: string; sections: Section[] } }
+  | { type: 'GENERATE_SUCCESS'; payload: { title: string; preamble: string; sections: Section[] } }
   | { type: 'GENERATE_ERROR'; payload: string }
   | { type: 'SET_TITLE'; payload: string }
   | { type: 'UPDATE_SECTION'; payload: { id: string; content: string } }

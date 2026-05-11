@@ -35,11 +35,12 @@ export default function EditWorkspace() {
         repoInfo: state.repoInfo,
       }, abortRef.current.signal);
 
-      const { sections } = parseSections(markdown);
+      const { preamble, sections } = parseSections(markdown);
       dispatch({
         type: 'GENERATE_SUCCESS',
         payload: {
           title: state.repoInfo.name,
+          preamble,
           sections: sections.length > 0 ? sections : [
             { id: crypto.randomUUID(), heading: '简介', content: markdown },
           ],

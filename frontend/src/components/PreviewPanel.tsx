@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { useApp } from '../context/AppContext';
 import { assembleMarkdown } from '../services/markdown';
 
@@ -68,8 +69,8 @@ export default function PreviewPanel() {
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   const markdown = useMemo(
-    () => assembleMarkdown(state.title, state.sections),
-    [state.title, state.sections]
+    () => assembleMarkdown(state.title, state.preamble, state.sections),
+    [state.title, state.preamble, state.sections]
   );
 
   const toc = useMemo(() => {
@@ -156,12 +157,13 @@ export default function PreviewPanel() {
 
       {/* 预览内容 */}
       {markdown ? (
-        <div className="prose prose-slate max-w-none p-6 prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-lg
+        <div className="prose prose-slate max-w-none p-6 prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-lg prose-img:inline prose-img:my-0
           prose-code:before:content-none prose-code:after:content-none
           prose-code:!text-inherit prose-code:!bg-transparent prose-code:!font-normal
           prose-pre:!bg-gray-900 prose-pre:!text-gray-100 prose-pre:!border-0">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
             components={{
               a: ({ href, children }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer">

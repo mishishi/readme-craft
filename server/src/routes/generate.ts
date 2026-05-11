@@ -3,6 +3,11 @@ import { generateReadme } from '../services/minimax.js';
 import { buildSystemPrompt, buildUserPrompt } from '../services/prompts.js';
 import { scanProject } from '../services/project-scanner.js';
 
+/** 清理 MiniMax 返回：去掉可能包裹的 markdown 代码块标记 */
+function cleanMarkdown(raw: string): string {
+  return raw.replace(/^```markdown\s*\n?/i, '').replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
+}
+
 interface GenerateBody {
   repoUrl: string;
   templateId: string;
@@ -45,7 +50,7 @@ export async function generateRoutes(app: FastifyInstance) {
       }
 
       const userPrompt = buildUserPrompt(repoInfo, projectContext);
-      const markdown = await generateReadme(systemPrompt, userPrompt);
+      const markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));
       return { markdown };
     } catch (err) {
       const message = err instanceof Error ? err.message : '生成失败';

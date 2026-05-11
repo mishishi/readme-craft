@@ -1,40 +1,33 @@
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
 
-/** 每个模板的视觉预览小样 — 展示实际排版风格 */
+/** 每个模板的 Markdown 风格预览 — 展示实际排版结构和视觉风格 */
 export function TemplatePreview({ id }: { id: string; accent?: string }) {
   switch (id) {
     case 'minimal':
       return (
-        <div className="w-full rounded-md bg-white p-3">
-          {/* Title */}
-          <div className="mb-2 h-3 w-3/5 rounded bg-gray-800" />
-          {/* Description */}
-          <div className="mb-1.5 h-1.5 w-full rounded bg-gray-200" />
-          <div className="mb-2 h-1.5 w-4/5 rounded bg-gray-200" />
-          {/* Section heading */}
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="text-[7px]">📖</span>
-            <div className="h-2 w-12 rounded bg-gray-700" />
+        <div className="w-full rounded-md bg-white p-3 font-sans text-[10px] leading-relaxed text-gray-700">
+          {/* 标题 — 纯文字，无装饰 */}
+          <div className="mb-1 text-xs font-bold text-gray-900">chalk</div>
+          <p className="mb-1.5 text-[9px] leading-relaxed text-gray-500">
+            Terminal string styling with expressive API, zero dependencies.
+          </p>
+          {/* 特性列表 — 纯 Markdown dash 风格 */}
+          <div className="mb-1.5 text-[9px] text-gray-600">
+            <span className="font-medium text-gray-700">Features</span>
           </div>
-          {/* Feature items */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-[6px]">✅</span>
-              <div className="h-1.5 flex-1 rounded bg-blue-100" />
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[6px]">✅</span>
-              <div className="h-1.5 flex-1 rounded bg-blue-50" />
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[6px]">✅</span>
-              <div className="h-1.5 flex-1 rounded bg-blue-50" />
-            </div>
+          <ul className="mb-1.5 list-inside list-disc space-y-[2px] text-[9px] text-gray-600">
+            <li>Lightweight and fast</li>
+            <li>Chainable API</li>
+            <li>256-color support</li>
+          </ul>
+          {/* 代码块 — 灰色背景模拟 */}
+          <div className="rounded bg-gray-100 p-1.5 font-mono text-[8px] text-gray-700">
+            npm install chalk
           </div>
-          {/* Code block hint */}
-          <div className="mt-1.5 rounded bg-gray-100 p-1">
-            <div className="h-1 w-10 rounded bg-gray-300" />
+          {/* 许可证 — 小字 */}
+          <div className="mt-1.5 border-t border-gray-100 pt-1 text-[8px] text-gray-400">
+            MIT © sindresorhus
           </div>
         </div>
       );
@@ -42,35 +35,38 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
     case 'badges':
       return (
         <div className="w-full rounded-md bg-white p-3">
-          {/* Badge row */}
-          <div className="mb-2 flex flex-wrap gap-0.5">
-            <span className="rounded-sm bg-blue-500 px-1 py-[1px] text-[5px] font-medium text-white">v1.0.0</span>
-            <span className="rounded-sm bg-green-500 px-1 py-[1px] text-[5px] font-medium text-white">build</span>
-            <span className="rounded-sm bg-orange-500 px-1 py-[1px] text-[5px] font-medium text-white">MIT</span>
-            <span className="rounded-sm bg-purple-500 px-1 py-[1px] text-[5px] font-medium text-white">95%</span>
-            <span className="rounded-sm bg-cyan-500 px-1 py-[1px] text-[5px] font-medium text-white">react</span>
-            <span className="rounded-sm bg-red-500 px-1 py-[1px] text-[5px] font-medium text-white">18x</span>
+          {/* Badge 墙 — 多彩颜色 */}
+          <div className="mb-2 flex flex-wrap gap-[3px]">
+            <span className="rounded-sm bg-[#f59e0b] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">version 1.0</span>
+            <span className="rounded-sm bg-[#f43f5e] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">MIT</span>
+            <span className="rounded-sm bg-[#ea580c] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">TypeScript</span>
+            <span className="rounded-sm bg-[#fb923c] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">10k stars</span>
+            <span className="rounded-sm bg-[#ef4444] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">passing</span>
+            <span className="rounded-sm bg-[#f97316] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">90%</span>
+            <span className="rounded-sm bg-[#eab308] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">ready</span>
           </div>
-          {/* Title */}
-          <div className="mb-1.5 h-2.5 w-3/4 rounded bg-gray-800" />
-          {/* Feature cards grid */}
-          <div className="grid grid-cols-2 gap-1">
-            <div className="rounded border border-gray-100 bg-gray-50 p-1.5">
-              <div className="mb-0.5 h-1 w-6 rounded bg-amber-300" />
-              <div className="h-1 rounded bg-gray-200" />
+          {/* 表格 — 特性矩阵 */}
+          <div className="mb-1.5">
+            <div className="flex border-b border-gray-200 pb-1 text-[8px] font-semibold text-gray-600">
+              <span className="w-1/3">特性</span>
+              <span className="w-2/3">说明</span>
             </div>
-            <div className="rounded border border-gray-100 bg-gray-50 p-1.5">
-              <div className="mb-0.5 h-1 w-6 rounded bg-amber-300" />
-              <div className="h-1 rounded bg-gray-200" />
+            <div className="flex border-b border-gray-100 py-1 text-[8px] text-gray-500">
+              <span className="w-1/3 font-medium text-amber-600">⚡ Fast</span>
+              <span className="w-2/3">Sub-second rendering</span>
             </div>
-            <div className="rounded border border-gray-100 bg-gray-50 p-1.5">
-              <div className="mb-0.5 h-1 w-6 rounded bg-amber-300" />
-              <div className="h-1 rounded bg-gray-200" />
+            <div className="flex border-b border-gray-100 py-1 text-[8px] text-gray-500">
+              <span className="w-1/3 font-medium text-orange-600">🎯 Simple</span>
+              <span className="w-2/3">Zero config setup</span>
             </div>
-            <div className="rounded border border-gray-100 bg-gray-50 p-1.5">
-              <div className="mb-0.5 h-1 w-6 rounded bg-amber-300" />
-              <div className="h-1 rounded bg-gray-200" />
+            <div className="flex py-1 text-[8px] text-gray-500">
+              <span className="w-1/3 font-medium text-rose-600">🔥 Hot</span>
+              <span className="w-2/3">Live reload included</span>
             </div>
+          </div>
+          {/* 技术栈 */}
+          <div className="rounded bg-amber-50 p-1.5 text-[8px] text-amber-800">
+            <span className="font-semibold">Stack:</span> React · TypeScript · Vite
           </div>
         </div>
       );
@@ -78,29 +74,36 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
     case 'enterprise':
       return (
         <div className="w-full rounded-md bg-white">
-          {/* Gradient header bar */}
-          <div className="flex h-8 items-center justify-center rounded-t-md bg-gradient-to-r from-indigo-600 to-blue-600">
-            <div className="h-2 w-24 rounded-full bg-white/30" />
+          {/* 居中 badge 行 */}
+          <div className="flex justify-center gap-1 border-b border-gray-200 bg-gray-50 px-3 py-2">
+            <span className="rounded-sm bg-[#6366f1] px-1.5 py-[2px] text-[7px] font-medium text-white">v2.0</span>
+            <span className="rounded-sm bg-[#3b82f6] px-1.5 py-[2px] text-[7px] font-medium text-white">build</span>
+            <span className="rounded-sm bg-[#1e40af] px-1.5 py-[2px] text-[7px] font-medium text-white">MIT</span>
           </div>
-          {/* Content */}
+          {/* 内容区 */}
           <div className="p-3 pt-2">
-            <div className="mb-1.5 h-2.5 w-1/2 rounded bg-gray-800" />
-            <div className="h-1 w-full rounded bg-gray-200" />
-            <div className="mb-2 h-1 w-4/5 rounded bg-gray-200" />
-            {/* Table */}
-            <div className="space-y-0.5">
-              <div className="flex gap-2">
-                <div className="h-1.5 w-8 rounded bg-indigo-200" />
-                <div className="h-1.5 flex-1 rounded bg-gray-100" />
+            <div className="mb-1.5 text-[10px] font-bold text-gray-900">Enterprise Dashboard</div>
+            {/* 3 列表格 */}
+            <div className="mb-2 overflow-hidden rounded border border-gray-200 text-[8px]">
+              <div className="flex bg-indigo-50 px-1.5 py-1 font-semibold text-indigo-700">
+                <span className="w-[34%]">Module</span>
+                <span className="w-[33%]">Description</span>
+                <span className="w-[33%]">Use Case</span>
               </div>
-              <div className="flex gap-2">
-                <div className="h-1.5 w-8 rounded bg-indigo-200" />
-                <div className="h-1.5 flex-1 rounded bg-gray-100" />
+              <div className="flex border-t border-gray-100 px-1.5 py-1 text-gray-600">
+                <span className="w-[34%] font-medium">Auth</span>
+                <span className="w-[33%]">Auth system</span>
+                <span className="w-[33%]">Login flow</span>
               </div>
-              <div className="flex gap-2">
-                <div className="h-1.5 w-8 rounded bg-indigo-200" />
-                <div className="h-1.5 flex-1 rounded bg-gray-100" />
+              <div className="flex border-t border-gray-100 px-1.5 py-1 text-gray-600">
+                <span className="w-[34%] font-medium">Cache</span>
+                <span className="w-[33%]">Redis cache</span>
+                <span className="w-[33%]">Performance</span>
               </div>
+            </div>
+            {/* 代码块 */}
+            <div className="rounded bg-gray-900 p-1.5 font-mono text-[8px] text-green-400">
+              npm install &amp;&amp; npm run build
             </div>
           </div>
         </div>
@@ -109,59 +112,69 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
     case 'cards':
       return (
         <div className="w-full rounded-md bg-gradient-to-br from-emerald-50 to-teal-50 p-3">
-          {/* Title */}
-          <div className="mb-1.5 h-2.5 w-2/3 rounded bg-gray-800" />
-          {/* Card grid */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-lg border border-emerald-200 bg-white p-2 shadow-sm">
-              <div className="mb-0.5 h-1.5 w-6 rounded bg-emerald-400" />
-              <div className="h-1 rounded bg-emerald-100" />
-              <div className="mt-0.5 h-1 w-3/4 rounded bg-emerald-50" />
+          {/* 标题 + emoji */}
+          <div className="mb-1 flex items-center gap-1">
+            <span className="text-[11px]">✨</span>
+            <span className="text-[10px] font-bold text-gray-800">Chalk — 颜色工具</span>
+          </div>
+          {/* 引用块模拟卡片 */}
+          <div className="mb-1 rounded border-l-2 border-emerald-400 bg-white px-2 py-1.5 shadow-sm">
+            <div className="flex items-center gap-1 text-[9px] font-medium text-emerald-700">
+              <span>🌟</span> Highlights
             </div>
-            <div className="rounded-lg border border-emerald-200 bg-white p-2 shadow-sm">
-              <div className="mb-0.5 h-1.5 w-5 rounded bg-teal-400" />
-              <div className="h-1 rounded bg-emerald-100" />
-              <div className="mt-0.5 h-1 w-3/4 rounded bg-emerald-50" />
+            <p className="mt-[2px] text-[8px] text-gray-500 leading-relaxed">
+              Expressive API with chainable methods for terminal colors.
+            </p>
+          </div>
+          <div className="mb-1 rounded border-l-2 border-teal-400 bg-white px-2 py-1.5 shadow-sm">
+            <div className="flex items-center gap-1 text-[9px] font-medium text-teal-700">
+              <span>🎯</span> Features
             </div>
-            <div className="rounded-lg border border-emerald-200 bg-white p-2 shadow-sm">
-              <div className="mb-0.5 h-1.5 w-7 rounded bg-emerald-400" />
-              <div className="h-1 rounded bg-emerald-100" />
-              <div className="mt-0.5 h-1 w-3/4 rounded bg-emerald-50" />
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-white p-2 shadow-sm">
-              <div className="mb-0.5 h-1.5 w-4 rounded bg-teal-400" />
-              <div className="h-1 rounded bg-emerald-100" />
-              <div className="mt-0.5 h-1 w-3/4 rounded bg-emerald-50" />
-            </div>
+            <p className="mt-[2px] text-[8px] text-gray-500 leading-relaxed">
+              Supports 256 colors, true color, and nested styles.
+            </p>
+          </div>
+          {/* 箭头技术栈列表 */}
+          <div className="text-[8px] text-gray-600">
+            <span className="font-medium text-gray-700">Node.js</span>
+            <span className="mx-1 text-emerald-400">→</span>
+            <span className="text-gray-500">npm</span>
+            <span className="mx-1 text-emerald-400">→</span>
+            <span className="text-gray-500">CLI</span>
           </div>
         </div>
       );
 
     case 'showcase':
       return (
-        <div className="w-full rounded-md">
-          {/* Banner */}
-          <div className="flex h-12 items-center justify-center rounded-t-md bg-gradient-to-r from-violet-600 via-purple-600 to-pink-500">
-            <div className="flex gap-2">
-              <span className="h-1.5 w-4 rounded-full bg-white/40" />
-              <span className="h-1.5 w-8 rounded-full bg-white/40" />
-              <span className="h-1.5 w-4 rounded-full bg-white/40" />
-            </div>
+        <div className="w-full overflow-hidden rounded-md">
+          {/* Banner 条 */}
+          <div className="flex h-10 items-center justify-center bg-gradient-to-r from-violet-600 via-purple-600 to-pink-500 px-3">
+            <span className="text-[9px] font-semibold tracking-wider text-white/80">
+              CHALK — Terminal Colors
+            </span>
           </div>
-          {/* Content */}
-          <div className="bg-white p-3 pt-2">
-            <div className="mb-1.5 h-3 w-3/5 rounded bg-gray-800" />
-            <div className="mb-1 h-1 w-full rounded bg-gray-200" />
-            <div className="mb-2 h-1 w-3/4 rounded bg-gray-200" />
-            {/* Feature badges */}
-            <div className="flex flex-wrap gap-1">
-              <span className="rounded-full bg-violet-100 px-1.5 py-[1px] text-[6px] text-violet-700">Vue 3</span>
-              <span className="rounded-full bg-purple-100 px-1.5 py-[1px] text-[6px] text-purple-700">TypeScript</span>
-              <span className="rounded-full bg-pink-100 px-1.5 py-[1px] text-[6px] text-pink-700">Tailwind</span>
+          {/* 内容 */}
+          <div className="bg-white p-3">
+            {/* 叙事段落 */}
+            <p className="mb-1.5 text-[9px] leading-relaxed text-gray-600">
+              Chalk started as a small experiment to bring expressive colors to Node.js terminals. What began as a weekend project grew into one of the most beloved npm packages.
+            </p>
+            {/* 路线图 */}
+            <div className="mb-1.5 space-y-[2px] text-[8px]">
+              <div className="text-gray-400">
+                <span className="mr-1 text-gray-300">☐</span> V3 plugin system
+              </div>
+              <div className="text-gray-400">
+                <span className="mr-1 text-gray-300">☐</span> WebAssembly port
+              </div>
+              <div className="text-emerald-600">
+                <span className="mr-1">☑</span> ESM support
+              </div>
             </div>
-            {/* Screenshot placeholder */}
-            <div className="mt-1.5 rounded border border-dashed border-gray-200 bg-gray-50 p-2 text-center">
-              <div className="mx-auto h-4 w-16 rounded bg-gradient-to-r from-violet-200 to-purple-200" />
+            {/* 结束语 */}
+            <div className="border-t border-gray-100 pt-1 text-[8px] italic text-gray-400">
+              "Color your terminal, color your code."
             </div>
           </div>
         </div>
@@ -173,11 +186,11 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
 }
 
 const recommendations: Record<string, string> = {
-  minimal: '基础项目',
+  minimal: '基础项目 / 工具库',
   badges: '开源项目',
-  enterprise: '商业项目',
-  cards: '前端项目',
-  showcase: '作品展示',
+  enterprise: '商业 / 团队项目',
+  cards: '前端 / 设计项目',
+  showcase: '个人作品 / App',
 };
 
 export default function TemplateSelector() {
@@ -191,7 +204,10 @@ export default function TemplateSelector() {
         return (
           <button
             key={t.id}
-            onClick={() => dispatch({ type: 'SELECT_TEMPLATE', payload: t.id })}
+            onClick={() => {
+              dispatch({ type: 'SELECT_TEMPLATE', payload: t.id });
+              dispatch({ type: 'SHOW_TOAST', payload: { message: `已选择「${t.name}」模板`, type: 'success' } });
+            }}
             className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
               selected
                 ? 'border-indigo-500 bg-indigo-50 shadow-md ring-1 ring-indigo-500/20 animate-[scale-up_200ms_ease-out]'

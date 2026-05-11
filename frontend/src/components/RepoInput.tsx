@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
+
+const SAMPLE_REPO = 'https://github.com/chalk/chalk';
 
 interface Props {
   disabled: boolean;
@@ -9,21 +10,21 @@ interface Props {
 
 export default function RepoInput({ disabled }: Props) {
   const { state, dispatch } = useApp();
-  const navigate = useNavigate();
   const [localUrl, setLocalUrl] = useState(state.repoUrl);
 
   const isValidUrl = /^(https?:\/\/)?(www\.)?github\.com\/[\w.-]+\/[\w.-]+/.test(localUrl.trim());
 
-  const handleFetch = useCallback(async () => {
-    if (!localUrl.trim()) return;
+  const handleFetch = useCallback(async (url?: string) => {
+    const target = (url ?? localUrl).trim();
+    if (!target) return;
 
-    dispatch({ type: 'SET_REPO_URL', payload: localUrl.trim() });
+    setLocalUrl(target);
+    dispatch({ type: 'SET_REPO_URL', payload: target });
     dispatch({ type: 'FETCH_REPO_START' });
 
     try {
-      const info = await fetchRepoInfo(localUrl.trim());
+      const info = await fetchRepoInfo(target);
       dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
-      navigate('/templates');
     } catch (err) {
       dispatch({
         type: 'FETCH_REPO_ERROR',
@@ -31,6 +32,10 @@ export default function RepoInput({ disabled }: Props) {
       });
     }
   }, [localUrl, dispatch]);
+
+  const handleSample = useCallback(() => {
+    handleFetch(SAMPLE_REPO);
+  }, [handleFetch]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && isValidUrl) handleFetch();
@@ -66,7 +71,7 @@ export default function RepoInput({ disabled }: Props) {
           )}
         </div>
         <button
-          onClick={handleFetch}
+          onClick={() => handleFetch()}
           disabled={disabled || state.repoLoading || !localUrl.trim()}
           className="btn-primary"
         >
@@ -74,9 +79,22 @@ export default function RepoInput({ disabled }: Props) {
         </button>
       </div>
 
-      {state.repoError && (
-        <p className="mt-2 text-sm text-red-500">{state.repoError}</p>
-      )}
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          onClick={handleSample}
+          disabled={disabled || state.repoLoading}
+          className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50/60 px-3 py-1 text-xs font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50"
+        >
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+          </svg>
+          试示例仓库
+        </button>
+
+        {state.repoError && (
+          <p className="text-sm text-red-500">{state.repoError}</p>
+        )}
+      </div>
     </div>
   );
 }

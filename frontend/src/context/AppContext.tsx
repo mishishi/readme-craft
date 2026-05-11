@@ -10,6 +10,7 @@ const initialState: AppState = {
   generating: false,
   generateError: null,
   title: '',
+  preamble: '',
   sections: [],
   toast: null,
   toasts: [],
@@ -35,7 +36,7 @@ function loadInitialState(): AppState {
 const MAX_HISTORY = 50;
 
 function pushHistory(state: AppState): { history: AppState['history']; historyIndex: number } {
-  const snapshot = { title: state.title, sections: state.sections };
+  const snapshot = { title: state.title, preamble: state.preamble, sections: state.sections };
   const history = state.history.slice(0, state.historyIndex + 1);
   history.push(snapshot);
   while (history.length > MAX_HISTORY) history.shift();
@@ -63,6 +64,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...genHistory,
         generating: false,
         title: action.payload.title,
+        preamble: action.payload.preamble,
         sections: action.payload.sections,
       };
     }
@@ -103,7 +105,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, toast: null, toasts: state.toasts.slice(1) };
     }
     case 'CLEAR_CONTENT':
-      return { ...state, sections: [], title: '', generating: false, generateError: null };
+      return { ...state, sections: [], title: '', preamble: '', generating: false, generateError: null };
     case 'ADD_SECTION': {
       const addHistory = pushHistory(state);
       const newSection = {
@@ -150,6 +152,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         title: prevSnapshot.title,
+        preamble: prevSnapshot.preamble,
         sections: prevSnapshot.sections,
         historyIndex: state.historyIndex - 1,
       };
@@ -160,6 +163,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         title: nextSnapshot.title,
+        preamble: nextSnapshot.preamble,
         sections: nextSnapshot.sections,
         historyIndex: state.historyIndex + 1,
       };

@@ -7,8 +7,8 @@ export default function ActionBar() {
   const [copying, setCopying] = useState(false);
 
   const getMarkdown = useCallback(
-    () => assembleMarkdown(state.title, state.sections),
-    [state.title, state.sections]
+    () => assembleMarkdown(state.title, state.preamble, state.sections),
+    [state.title, state.preamble, state.sections]
   );
 
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,8 +57,34 @@ export default function ActionBar() {
     });
   }, [getMarkdown, state.repoInfo, dispatch]);
 
+  const canUndo = state.historyIndex >= 0;
+  const canRedo = state.historyIndex < state.history.length - 1;
+
   return (
     <div className="flex items-center gap-2">
+      {/* Undo */}
+      <button
+        onClick={() => dispatch({ type: 'UNDO' })}
+        disabled={!canUndo}
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        title="撤销（⌘Z）"
+      >
+        <svg className={`h-3.5 w-3.5 ${!canUndo ? 'opacity-30' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+        </svg>
+      </button>
+      {/* Redo */}
+      <button
+        onClick={() => dispatch({ type: 'REDO' })}
+        disabled={!canRedo}
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        title="重做（⌘⇧Z / ⌘Y）"
+      >
+        <svg className={`h-3.5 w-3.5 ${!canRedo ? 'opacity-30' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+        </svg>
+      </button>
+      <span className="h-5 w-px bg-gray-200" />
       <button
         onClick={handleCopy}
         disabled={copying}

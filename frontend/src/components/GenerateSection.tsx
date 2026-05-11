@@ -5,105 +5,25 @@ import { generateReadme } from '../services/api';
 import { parseSections } from '../services/markdown';
 import { templates } from '../templates';
 import { TemplatePreview } from './TemplateSelector';
+import Modal from './Modal';
 
-function ConfirmModal({
-  templateId,
-  onConfirm,
-  onCancel,
-}: {
-  templateId: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const template = templates.find((t) => t.id === templateId);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onCancel(); return; }
-      if (e.key !== 'Tab') return;
-      const modal = modalRef.current;
-      if (!modal) return;
-      const focusable = modal.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    requestAnimationFrame(() => {
-      const buttons = modalRef.current?.querySelectorAll<HTMLButtonElement>('button');
-      if (buttons && buttons.length > 0) {
-        buttons[buttons.length - 1]?.focus(); // 聚焦"确认生成"
-      }
-    });
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
-
-  return (
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="确认生成 README"
-    >
-      <div className="mx-4 w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
-        <h3 className="mb-1 text-base font-semibold text-gray-900">确认生成 README</h3>
-        <p className="mb-4 text-sm text-gray-500">
-          将使用「{template?.name || '未知'}」模板生成 README，确认开始？
-        </p>
-
-        {/* 放大的预览 */}
-        {template && (
-          <div className="mb-5 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-            <div className={`bg-gradient-to-br ${template.preview.gradient} p-6 pb-4`}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">{template.preview.icon}</span>
-                <span className="text-sm font-semibold text-gray-600">{template.name}</span>
-              </div>
-              <div className="scale-[1.8] origin-top-left opacity-80">
-                <div className="w-[200px]">
-                  <TemplatePreview id={template.id} />
-                </div>
-              </div>
-            </div>
-            <div className="px-4 py-3 text-xs text-gray-500 bg-gray-50 border-t border-gray-100">
-              {template.description}
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button onClick={onCancel} className="btn-secondary text-sm">取消</button>
-          <button
-            onClick={onConfirm}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-          >
-            确认生成
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+const STATUS_MESSAGES = [
+  '正在分析仓库结构...',
+  '正在提取项目信息...',
+  '正在生成 README 内容...',
+  '正在优化章节排版...',
+];
 
 export default function GenerateSection() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [statusIdx, setStatusIdx] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setShowPulse(false), 3000);
@@ -114,11 +34,19 @@ export default function GenerateSection() {
   useEffect(() => {
     if (state.generating) {
       setElapsed(0);
+      setStatusIdx(0);
       timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+      statusTimerRef.current = setInterval(() => {
+        setStatusIdx((i) => (i + 1) % STATUS_MESSAGES.length);
+      }, 3000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (statusTimerRef.current) clearInterval(statusTimerRef.current);
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (statusTimerRef.current) clearInterval(statusTimerRef.current);
+    };
   }, [state.generating]);
 
   const canGenerate = state.selectedTemplate && state.repoInfo;
@@ -128,7 +56,7 @@ export default function GenerateSection() {
       abortRef.current.abort();
       abortRef.current = null;
     }
-    navigate('/templates');
+    navigate('/');
   }, [dispatch, navigate]);
 
   const handleGenerate = useCallback(async () => {
@@ -147,12 +75,13 @@ export default function GenerateSection() {
         repoInfo: state.repoInfo,
       }, signal);
 
-      const { sections } = parseSections(markdown);
+      const { preamble, sections } = parseSections(markdown);
 
       dispatch({
         type: 'GENERATE_SUCCESS',
         payload: {
           title: state.repoInfo.name,
+          preamble,
           sections: sections.length > 0 ? sections : [
             { id: crypto.randomUUID(), heading: '简介', content: markdown },
           ],
@@ -188,57 +117,21 @@ export default function GenerateSection() {
             </div>
           </div>
 
-          {/* Progress steps */}
-          <div className="space-y-3 text-left">
-            {[
-              { label: '分析仓库信息', min: 0 },
-              { label: '生成 README 内容', min: 3 },
-              { label: '格式化排版', min: 8 },
-            ].map((step, i) => {
-              const thresholds = [1, 4, 8];
-              const prevDone = elapsed >= thresholds[i];
-              const curActive = elapsed >= thresholds[i] && (i === 2 || elapsed < thresholds[i + 1]);
+          {/* 生成状态 — 每 3 秒循环切换文案 */}
+          <p className="mb-4 text-sm font-medium text-indigo-700 transition-opacity">
+            <span key={statusIdx} className="animate-fade-in-up inline-block">{STATUS_MESSAGES[statusIdx]}</span>
+          </p>
 
-              return (
-                <div key={step.label} className="flex items-center gap-3">
-                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                    curActive
-                      ? 'bg-indigo-100 text-indigo-600 ring-2 ring-indigo-200'
-                      : prevDone
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-300'
-                  }`}>
-                    {prevDone && !curActive ? (
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    ) : (
-                      <span>{i + 1}</span>
-                    )}
-                  </div>
-                  <span className={`text-sm ${
-                    curActive ? 'font-medium text-indigo-700' : prevDone ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    {step.label}
-                  </span>
-                  {curActive && (
-                    <span className="ml-auto flex gap-0.5">
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400" style={{ animationDelay: '300ms' }} />
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+          {/* 不确定进度条 */}
+          <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
+            <div className="h-full w-full origin-left animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" />
           </div>
 
-          {elapsed >= 15 && (
-            <p className="mt-4 text-xs text-amber-500">
-              生成时间较长，请耐心等待...
-            </p>
-          )}
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="text-xs text-gray-400">
+            已等待 {elapsed} 秒
+            {elapsed >= 15 && <span className="text-amber-500"> · 生成时间较长，请耐心等待...</span>}
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
             首次生成稍慢，同一仓库再次生成会更快
           </p>
           <button
@@ -268,16 +161,41 @@ export default function GenerateSection() {
         </>
       )}
 
-      {showConfirm && state.selectedTemplate && (
-        <ConfirmModal
-          templateId={state.selectedTemplate}
-          onConfirm={() => {
-            setShowConfirm(false);
-            handleGenerate();
-          }}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
+      {showConfirm && state.selectedTemplate && (() => {
+        const template = templates.find((t) => t.id === state.selectedTemplate);
+        return (
+          <Modal
+            open={showConfirm}
+            onClose={() => setShowConfirm(false)}
+            onConfirm={() => { setShowConfirm(false); handleGenerate(); }}
+            title="确认生成 README"
+            confirmText="确认生成"
+            hideIcon
+            containerClassName="max-w-lg"
+          >
+            <p className="mb-4 text-sm text-gray-500">
+              将使用「{template?.name || '未知'}」模板生成 README，确认开始？
+            </p>
+
+            {template && (
+              <div className="mb-5 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                <div className={`bg-gradient-to-br ${template.preview.gradient} p-5`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">{template.preview.icon}</span>
+                    <span className="text-sm font-semibold text-gray-600">{template.name}</span>
+                  </div>
+                  <div className="max-w-[260px]">
+                    <TemplatePreview id={template.id} />
+                  </div>
+                </div>
+                <div className="px-4 py-3 text-xs text-gray-500 bg-gray-50 border-t border-gray-100">
+                  {template.description}
+                </div>
+              </div>
+            )}
+          </Modal>
+        );
+      })()}
 
       {error && (
         <div className="mx-auto mt-3 max-w-md">
@@ -292,7 +210,7 @@ export default function GenerateSection() {
           </div>
           <div className="mt-2 flex justify-center gap-4 text-xs text-gray-400">
             <button
-              onClick={() => navigate('/templates')}
+              onClick={() => navigate('/')}
               className="transition-colors hover:text-indigo-500"
             >
               切换其他模板

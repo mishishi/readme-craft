@@ -1,15 +1,16 @@
 import type { Section } from '../types';
 
 /**
- * 将 markdown 解析为标题 + 章节列表
- * 支持 ## 分隔的章节结构
+ * 将 markdown 解析为 title + preamble（H2 前的内容）+ 章节列表
  */
-export function parseSections(markdown: string): { title: string; sections: Section[] } {
+export function parseSections(markdown: string): { title: string; preamble: string; sections: Section[] } {
   const lines = markdown.split('\n');
   let title = '';
+  let preambleLines: string[] = [];
   const sections: Section[] = [];
   let currentHeading = '';
   let currentContent: string[] = [];
+  let seenFirstH2 = false;
 
   for (const line of lines) {
     const h1 = line.match(/^# (.+)/);
@@ -20,7 +21,11 @@ export function parseSections(markdown: string): { title: string; sections: Sect
 
     const h2 = line.match(/^## (.+)/);
     if (h2) {
-      if (currentHeading) {
+      if (!seenFirstH2) {
+        seenFirstH2 = true;
+        preambleLines = [...currentContent];
+        currentContent = [];
+      } else if (currentHeading) {
         sections.push({
           id: crypto.randomUUID(),
           heading: currentHeading,
@@ -35,7 +40,10 @@ export function parseSections(markdown: string): { title: string; sections: Sect
   }
 
   // 最后一个章节
-  if (currentHeading) {
+  if (!seenFirstH2 && currentContent.length > 0) {
+    // 没有 H2 的情况，全部作为 preamble
+    preambleLines = [...currentContent];
+  } else if (currentHeading) {
     sections.push({
       id: crypto.randomUUID(),
       heading: currentHeading,
@@ -43,14 +51,21 @@ export function parseSections(markdown: string): { title: string; sections: Sect
     });
   }
 
-  return { title, sections };
+  return {
+    title,
+    preamble: preambleLines.join('\n').trim(),
+    sections,
+  };
 }
 
 /**
- * 将标题 + 章节列表组装回 markdown
+ * 将 title + preamble + sections 组装回 markdown
  */
-export function assembleMarkdown(title: string, sections: Section[]): string {
+export function assembleMarkdown(title: string, preamble: string, sections: Section[]): string {
   const parts = [`# ${title}`];
+  if (preamble) {
+    parts.push('', preamble);
+  }
   for (const s of sections) {
     if (s.content.trim()) {
       parts.push('', `## ${s.heading}`, '', s.content);

@@ -394,6 +394,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
               ref={textareaRef}
               value={section.content}
               onChange={(e) => handleChange(e.target.value)}
+              onFocus={handleSectionFocus}
               tabIndex={0}
               className="input-field !border-0 !p-0 !shadow-none !ring-0 font-mono text-sm leading-relaxed resize-none min-h-[120px]"
               placeholder="编辑此章节内容（支持 Markdown 语法）..."

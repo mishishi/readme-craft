@@ -1,98 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-
-function ConfirmModal({
-  message,
-  onConfirm,
-  onCancel,
-}: {
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onCancel(); return; }
-      if (e.key !== 'Tab') return;
-      const modal = modalRef.current;
-      if (!modal) return;
-      const focusable = modal.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    requestAnimationFrame(() => {
-      const cancelBtn = modalRef.current?.querySelector<HTMLButtonElement>('button');
-      cancelBtn?.focus();
-    });
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
-
-  return (
-    <div
-      ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="确认返回"
-    >
-      <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <h3 className="mb-2 text-base font-semibold text-gray-900">确认返回</h3>
-        <p className="mb-6 text-sm text-gray-500">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button onClick={onCancel} className="btn-secondary text-sm">
-            取消
-          </button>
-          <button
-            onClick={onConfirm}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-amber-700"
-          >
-            确认返回
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import Modal from './Modal';
 
 export default function Header() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
-  const logoTriggerRef = useRef<HTMLElement | null>(null);
 
   const hasContent = state.title || state.sections.length > 0;
 
   const handleLogoClick = () => {
-    logoTriggerRef.current = document.activeElement as HTMLElement;
     if (hasContent) {
       setShowConfirm(true);
     } else {
       navigate('/');
     }
-  };
-
-  const closeConfirm = () => {
-    setShowConfirm(false);
-    requestAnimationFrame(() => logoTriggerRef.current?.focus());
   };
 
   const confirmBack = () => {
@@ -136,13 +59,16 @@ export default function Header() {
         </div>
       </header>
 
-      {showConfirm && (
-        <ConfirmModal
-          message="当前编辑内容将丢失，确定要返回吗？"
-          onConfirm={confirmBack}
-          onCancel={closeConfirm}
-        />
-      )}
+      <Modal
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmBack}
+        title="确认返回"
+        confirmText="确认返回"
+        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-amber-700"
+      >
+        <p className="mb-6 text-sm text-gray-500">当前编辑内容将丢失，确定要返回吗？</p>
+      </Modal>
     </>
   );
 }

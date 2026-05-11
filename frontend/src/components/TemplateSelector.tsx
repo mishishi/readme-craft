@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
+import { trackEvent } from '../services/tracking';
 
 /** 每个模板的 Markdown 风格预览 — 展示实际排版结构和视觉风格 */
 export function TemplatePreview({ id }: { id: string; accent?: string }) {
@@ -207,6 +208,7 @@ export default function TemplateSelector() {
             onClick={() => {
               dispatch({ type: 'SELECT_TEMPLATE', payload: t.id });
               dispatch({ type: 'SHOW_TOAST', payload: { message: `已选择「${t.name}」模板`, type: 'success' } });
+              trackEvent('template_selected', { templateId: t.id, templateName: t.name });
             }}
             className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
               selected

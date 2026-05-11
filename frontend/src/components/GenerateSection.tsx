@@ -6,6 +6,7 @@ import { parseSections } from '../services/markdown';
 import { templates } from '../templates';
 import { TemplatePreview } from './TemplateSelector';
 import Modal from './Modal';
+import { trackEvent } from '../services/tracking';
 
 const STATUS_MESSAGES = [
   '正在分析仓库结构...',
@@ -67,6 +68,7 @@ export default function GenerateSection() {
 
     dispatch({ type: 'GENERATE_START' });
     setError(null);
+    trackEvent('generation_started', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName });
 
     try {
       const markdown = await generateReadme({
@@ -91,6 +93,7 @@ export default function GenerateSection() {
         type: 'SHOW_TOAST',
         payload: { message: 'README 生成成功，已跳转到编辑页面', type: 'success' },
       });
+      trackEvent('generation_succeeded', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName, sectionCount: sections.length });
       navigate('/editor', { state: { fromGeneration: true } });
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
@@ -99,11 +102,12 @@ export default function GenerateSection() {
       const msg = err instanceof Error ? err.message : '生成失败';
       setError(msg);
       dispatch({ type: 'GENERATE_ERROR', payload: msg });
+      trackEvent('generation_failed', { templateId: state.selectedTemplate, repo: state.repoInfo?.fullName, error: msg });
     }
   }, [state.selectedTemplate, state.repoInfo, state.repoUrl, dispatch, navigate]);
 
   return (
-    <div className="mt-8 text-center">
+    <div id="generate-section" className="mt-8 text-center">
       {state.generating ? (
         <div className="mx-auto max-w-sm rounded-xl border border-indigo-100 bg-gradient-to-b from-indigo-50/50 to-white p-8 shadow-sm">
           {/* Spinner */}

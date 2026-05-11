@@ -215,10 +215,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state.generating, state.sections, state.title, state.preamble, state.repoInfo, state.repoUrl, state.selectedTemplate]);
 
   useEffect(() => {
-    try {
-      const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, history, historyIndex, ...persistable } = state;
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(persistable));
-    } catch {}
+    const id = requestAnimationFrame(() => {
+      try {
+        const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, history, historyIndex, ...persistable } = state;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(persistable));
+      } catch {}
+    });
+    return () => cancelAnimationFrame(id);
   }, [state]);
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;

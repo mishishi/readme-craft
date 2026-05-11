@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { getEntries } from '../services/history';
@@ -11,6 +11,15 @@ export default function Header() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyCount, setHistoryCount] = useState(0);
+
+  // Refresh badge when generation auto-saves
+  const prevGeneratingRef = useRef(state.generating);
+  useEffect(() => {
+    if (prevGeneratingRef.current && !state.generating) {
+      setHistoryCount(getEntries().length);
+    }
+    prevGeneratingRef.current = state.generating;
+  }, [state.generating]);
 
   const hasContent = state.title || state.sections.length > 0;
 

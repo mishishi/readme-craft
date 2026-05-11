@@ -9,6 +9,7 @@ import TemplateSelector from './components/TemplateSelector';
 import GenerateSection from './components/GenerateSection';
 import Modal from './components/Modal';
 import EditWorkspace from './components/EditWorkspace';
+import { trackEvent } from './services/tracking';
 
 function Toast({ id, message, type, onClose }: { id: string; message: string; type: 'success' | 'error'; onClose: (id: string) => void }) {
   const [paused, setPaused] = useState(false);
@@ -148,6 +149,11 @@ function EditorPage() {
 function AppRoutes() {
   const { state, dispatch } = useApp();
   const location = useLocation();
+
+  // Page view tracking
+  useEffect(() => {
+    trackEvent('page_view', { path: location.pathname });
+  }, [location.pathname]);
 
   // 全局快捷键
   useEffect(() => {

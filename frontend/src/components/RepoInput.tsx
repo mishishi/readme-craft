@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
 import { preScanProject } from '../services/api';
-
-const SAMPLE_REPO = 'https://github.com/chalk/chalk';
+import { trackEvent } from '../services/tracking';
 
 interface Props {
   disabled: boolean;
@@ -22,26 +21,26 @@ export default function RepoInput({ disabled }: Props) {
     setLocalUrl(target);
     dispatch({ type: 'SET_REPO_URL', payload: target });
     dispatch({ type: 'FETCH_REPO_START' });
+    trackEvent('repo_url_entered', { url: target });
 
     try {
       const info = await fetchRepoInfo(target);
       dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
+      trackEvent('repo_fetched', { fullName: info.fullName, language: info.language });
       // Background pre-scan for faster generation
       const parsed = info.fullName.split('/');
       if (parsed.length === 2) {
         preScanProject(parsed[0], parsed[1], info.defaultBranch);
       }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : '获取仓库信息失败';
       dispatch({
         type: 'FETCH_REPO_ERROR',
-        payload: err instanceof Error ? err.message : '获取仓库信息失败',
+        payload: msg,
       });
+      trackEvent('repo_fetch_failed', { url: target, error: msg });
     }
   }, [localUrl, dispatch]);
-
-  const handleSample = useCallback(() => {
-    handleFetch(SAMPLE_REPO);
-  }, [handleFetch]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && isValidUrl) handleFetch();
@@ -85,22 +84,9 @@ export default function RepoInput({ disabled }: Props) {
         </button>
       </div>
 
-      <div className="mt-2 flex items-center gap-3">
-        <button
-          onClick={handleSample}
-          disabled={disabled || state.repoLoading}
-          className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50/60 px-3 py-1 text-xs font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50"
-        >
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-          </svg>
-          试示例仓库
-        </button>
-
         {state.repoError && (
-          <p className="text-sm text-red-500">{state.repoError}</p>
+          <p className="mt-2 text-sm text-red-500">{state.repoError}</p>
         )}
-      </div>
     </div>
   );
 }

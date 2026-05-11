@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { assembleMarkdown } from '../services/markdown';
+import { trackEvent } from '../services/tracking';
 
 export default function ActionBar() {
   const { state, dispatch } = useApp();
@@ -33,6 +34,7 @@ export default function ActionBar() {
     if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
     copyTimeoutRef.current = setTimeout(() => {
       setCopying(false);
+      trackEvent('readme_copied');
       dispatch({
         type: 'SHOW_TOAST',
         payload: { message: '已复制到剪贴板', type: 'success' },
@@ -51,6 +53,7 @@ export default function ActionBar() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    trackEvent('readme_downloaded', { filename: `${state.title || 'README'}.md` });
     dispatch({
       type: 'SHOW_TOAST',
       payload: { message: 'README 已下载', type: 'success' },

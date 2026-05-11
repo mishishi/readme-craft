@@ -20,6 +20,19 @@ function getFromCache(key: string): string | null {
   return entry.data;
 }
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function getHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
@@ -39,7 +52,7 @@ async function fetchGitHubContent(
 ): Promise<string | null> {
   try {
     const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path ? encodeURIComponent(path) : ''}?ref=${encodeURIComponent(branch)}`;
-    const res = await fetch(url, { headers: getHeaders() });
+    const res = await fetchWithTimeout(url, { headers: getHeaders() });
     if (!res.ok) return null;
     const data = await res.json();
     if (Array.isArray(data) || !data.content) return null;
@@ -57,7 +70,7 @@ async function fetchGitHubTree(
 ): Promise<GitHubTreeItem[]> {
   try {
     const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-    const res = await fetch(url, { headers: getHeaders() });
+    const res = await fetchWithTimeout(url, { headers: getHeaders() });
     if (!res.ok) return [];
     const data = await res.json();
     return data.tree || [];
@@ -95,7 +108,7 @@ const KEY_FILES = [
 ];
 
 /** Node 依赖 → 框架/工具推断 */
-function detectFrameworks(deps: Record<string, string>, isDev: boolean): string[] {
+function detectFrameworks(deps: Record<string, string>): string[] {
   const map: Record<string, string> = {
     react: 'React', vue: 'Vue', angular: 'Angular', svelte: 'Svelte',
     next: 'Next.js', nuxt: 'Nuxt', gatsby: 'Gatsby', 'remix': 'Remix',
@@ -213,8 +226,8 @@ export async function scanProject(
         const devDeps = pkg.devDependencies ? Object.keys(pkg.devDependencies) : [];
 
         // Framework detection
-        const frameworks = detectFrameworks(pkg.dependencies || {}, false);
-        const devFrameworks = detectFrameworks(pkg.devDependencies || {}, true);
+        const frameworks = detectFrameworks(pkg.dependencies || {});
+        const devFrameworks = detectFrameworks(pkg.devDependencies || {});
         const allFrameworks = [...new Set([...frameworks, ...devFrameworks])];
         if (allFrameworks.length > 0) {
           lines.push(`- 框架/工具: ${allFrameworks.join(', ')}`);

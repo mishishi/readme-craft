@@ -1,16 +1,6 @@
-import type { Section } from '../types';
+import type { HistoryEntry } from '../types';
 
-export interface HistoryEntry {
-  id: string;
-  repoFullName: string;
-  repoUrl: string;
-  templateId: string;
-  templateName: string;
-  title: string;
-  preamble: string;
-  sections: Section[];
-  createdAt: number;
-}
+export type { HistoryEntry };
 
 const STORAGE_KEY = 'readme-craft-history';
 const MAX_ENTRIES = 50;

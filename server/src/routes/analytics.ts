@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { trackEvent } from '../services/analytics.js';
+import { trackEvent, getStats } from '../services/analytics.js';
 
 interface TrackBody {
   event: string;
@@ -19,5 +19,9 @@ export async function analyticsRoutes(app: FastifyInstance) {
     trackEvent({ name: event, sessionId, timestamp: Date.now(), data }).catch(() => {});
 
     return { ok: true };
+  });
+
+  app.get('/analytics/stats', async () => {
+    return getStats();
   });
 }

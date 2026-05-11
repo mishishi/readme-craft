@@ -36,6 +36,7 @@ npm-debug.log*
 .pnp.*
 yarn-error.log
 lerna-debug.log
+server/data/
 
 # --- Test coverage ---
 coverage/

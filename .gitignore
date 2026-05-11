@@ -1,0 +1,50 @@
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- Build output ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- Environment ---
+.env
+.env.*local
+.env.production
+
+# --- IDE & Editor ---
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+
+# --- Runtime ---
+.pnp.*
+yarn-error.log
+lerna-debug.log
+
+# --- Test coverage ---
+coverage/
+.nyc_output/
+
+# --- Claude Code local config ---
+.claude/
+
+# --- Misc ---
+.cache/
+tmp/
+temp/

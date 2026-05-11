@@ -47,6 +47,18 @@ export interface AppState {
   historyIndex: number;
 }
 
+export interface HistoryEntry {
+  id: string;
+  repoFullName: string;
+  repoUrl: string;
+  templateId: string;
+  templateName: string;
+  title: string;
+  preamble: string;
+  sections: Section[];
+  createdAt: number;
+}
+
 export type AppAction =
   | { type: 'SET_REPO_URL'; payload: string }
   | { type: 'FETCH_REPO_START' }
@@ -70,4 +82,5 @@ export type AppAction =
   | { type: 'MOVE_SECTION_TO'; payload: { id: string; toIndex: number } }
   | { type: 'SET_COLLAPSED'; payload: { id: string; collapsed: boolean } }
   | { type: 'UNDO' }
-  | { type: 'REDO' };
+  | { type: 'REDO' }
+  | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[] } };

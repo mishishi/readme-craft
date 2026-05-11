@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from 'react';
 import type { AppState, AppAction } from '../types';
+import { saveEntry } from '../services/history';
+import { templates } from '../templates';
 
 const initialState: AppState = {
   repoUrl: '',
@@ -146,6 +148,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
         : state.collapsedSections.filter((id) => id !== action.payload.id);
       return { ...state, collapsedSections };
     }
+    case 'RESTORE_FROM_HISTORY':
+      return {
+        ...state,
+        title: action.payload.title,
+        preamble: action.payload.preamble,
+        sections: action.payload.sections,
+        history: [],
+        historyIndex: -1,
+      };
     case 'UNDO': {
       if (state.historyIndex < 0) return state;
       const prevSnapshot = state.history[state.historyIndex];
@@ -185,6 +196,23 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, undefined, loadInitialState);
+
+  // Auto-save to persistent history when generation completes
+  const prevGeneratingRef = useRef(state.generating);
+  useEffect(() => {
+    if (prevGeneratingRef.current && !state.generating && state.sections.length > 0 && state.repoInfo) {
+      saveEntry({
+        repoFullName: state.repoInfo.fullName,
+        repoUrl: state.repoUrl,
+        templateId: state.selectedTemplate || '',
+        templateName: templates.find((t) => t.id === state.selectedTemplate)?.name || '',
+        title: state.title,
+        preamble: state.preamble,
+        sections: state.sections,
+      });
+    }
+    prevGeneratingRef.current = state.generating;
+  }, [state.generating, state.sections, state.title, state.preamble, state.repoInfo, state.repoUrl, state.selectedTemplate]);
 
   useEffect(() => {
     try {

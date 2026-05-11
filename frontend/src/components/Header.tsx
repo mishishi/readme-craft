@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { getEntries } from '../services/history';
 import Modal from './Modal';
+import HistoryPanel from './HistoryPanel';
 
 export default function Header() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyCount, setHistoryCount] = useState(0);
 
   const hasContent = state.title || state.sections.length > 0;
 
@@ -23,6 +27,11 @@ export default function Header() {
     setShowConfirm(false);
     navigate('/');
   };
+
+  const openHistory = useCallback(() => {
+    setHistoryCount(getEntries().length);
+    setHistoryOpen(true);
+  }, []);
 
   return (
     <>
@@ -41,7 +50,22 @@ export default function Header() {
             </span>
           </button>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex items-center gap-3 text-sm text-gray-400">
+            <button
+              onClick={openHistory}
+              className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-gray-500 transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+              title="历史记录"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="hidden sm:inline">历史</span>
+              {historyCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-semibold text-white">
+                  {historyCount}
+                </span>
+              )}
+            </button>
             <span className="hidden items-center gap-1.5 sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
               <span>在线工具</span>
@@ -69,6 +93,11 @@ export default function Header() {
       >
         <p className="mb-6 text-sm text-gray-500">当前编辑内容将丢失，确定要返回吗？</p>
       </Modal>
+
+      <HistoryPanel
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </>
   );
 }

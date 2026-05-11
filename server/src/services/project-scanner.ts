@@ -66,6 +66,13 @@ async function fetchGitHubTree(
   }
 }
 
+/** 文件扩展名 → 语言映射 */
+const EXT_LANG: Record<string, string> = {
+  ts: 'TypeScript', tsx: 'TypeScript/React', js: 'JavaScript', jsx: 'JavaScript/React',
+  py: 'Python', rs: 'Rust', go: 'Go', java: 'Java', kt: 'Kotlin',
+  rb: 'Ruby', php: 'PHP', swift: 'Swift', cs: 'C#', ex: 'Elixir', exs: 'Elixir',
+};
+
 /** 要扫描的关键文件（对 README 生成最有价值） */
 const KEY_FILES = [
   'package.json',
@@ -77,7 +84,33 @@ const KEY_FILES = [
   'Dockerfile',
   'Makefile',
   'tsconfig.json',
+  'requirements.txt',
+  'Gemfile',
+  'composer.json',
+  'build.gradle',
+  'pom.xml',
+  'docker-compose.yml',
+  '.env.example',
+  'LICENSE',
 ];
+
+/** Node 依赖 → 框架/工具推断 */
+function detectFrameworks(deps: Record<string, string>, isDev: boolean): string[] {
+  const map: Record<string, string> = {
+    react: 'React', vue: 'Vue', angular: 'Angular', svelte: 'Svelte',
+    next: 'Next.js', nuxt: 'Nuxt', gatsby: 'Gatsby', 'remix': 'Remix',
+    express: 'Express', koa: 'Koa', fastify: 'Fastify', nest: 'NestJS',
+    prisma: 'Prisma', sequelize: 'Sequelize', typeorm: 'TypeORM', drizzle: 'Drizzle',
+    vitest: 'Vitest', jest: 'Jest', mocha: 'Mocha', playwright: 'Playwright',
+    tailwindcss: 'Tailwind CSS', vite: 'Vite', webpack: 'Webpack', eslint: 'ESLint',
+    axios: 'Axios', 'graphql': 'GraphQL', 'socket.io': 'Socket.io',
+  };
+  const found: string[] = [];
+  for (const [pkg, label] of Object.entries(map)) {
+    if (deps[pkg]) found.push(label);
+  }
+  return found;
+}
 
 /**
  * Scan a GitHub repo's project files and return a structured context summary
@@ -121,18 +154,41 @@ export async function scanProject(
     allPaths.has('pyproject.toml') && 'Python',
     allPaths.has('Cargo.toml') && 'Rust',
     allPaths.has('go.mod') && 'Go',
+    allPaths.has('Gemfile') && 'Ruby',
+    allPaths.has('composer.json') && 'PHP',
+    (allPaths.has('build.gradle') || allPaths.has('build.gradle.kts')) && 'Java / Kotlin (Gradle)',
+    allPaths.has('pom.xml') && 'Java (Maven)',
+    allPaths.has('Package.swift') && 'Swift',
+    allPaths.has('mix.exs') && 'Elixir',
   ].filter(Boolean).join(', ') || '其他';
 
   contextParts.push(`## 项目类型\n${projectType}`);
 
-  // 3. Detect source directories (sync, from tree)
-  const sourceDirs = ['src/', 'lib/', 'app/', 'cmd/'];
+  // 3. Detect languages from file extensions
+  const extCounts = new Map<string, number>();
+  for (const item of tree) {
+    if (item.type !== 'blob') continue;
+    const ext = item.path.split('.').pop()?.toLowerCase() || '';
+    if (ext && EXT_LANG[ext]) {
+      extCounts.set(ext, (extCounts.get(ext) || 0) + 1);
+    }
+  }
+  if (extCounts.size > 0) {
+    const sorted = [...extCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6);
+    const langLines = sorted.map(([ext, count]) => `- ${EXT_LANG[ext]}: ${count} 文件`);
+    contextParts.push(`## 使用语言\n${langLines.join('\n')}`);
+  }
+
+  // 4. Detect source directories (sync, from tree)
+  const sourceDirs = ['src/', 'lib/', 'app/', 'cmd/', 'packages/'];
   const foundSrc = sourceDirs.filter((d) => allPaths.has(d) || [...allPaths].some((p) => p.startsWith(d)));
   if (foundSrc.length > 0) {
     contextParts.push(`## 源码目录\n${foundSrc.map((d) => `- ${d}`).join('\n')}`);
   }
 
-  // 4. Fetch key files in parallel
+  // 5. Fetch key files in parallel
   const fileResults = await Promise.all(
     KEY_FILES.map((path) =>
       allPaths.has(path) || (path === 'README' && [...allPaths].some((p) => p === 'README' || p.startsWith('README.')))
@@ -141,7 +197,7 @@ export async function scanProject(
     )
   );
 
-  // 5. Process fetched files
+  // 6. Process fetched files
   for (const { path, content } of fileResults) {
     if (!content) continue;
 
@@ -155,6 +211,15 @@ export async function scanProject(
 
         const deps = pkg.dependencies ? Object.keys(pkg.dependencies) : [];
         const devDeps = pkg.devDependencies ? Object.keys(pkg.devDependencies) : [];
+
+        // Framework detection
+        const frameworks = detectFrameworks(pkg.dependencies || {}, false);
+        const devFrameworks = detectFrameworks(pkg.devDependencies || {}, true);
+        const allFrameworks = [...new Set([...frameworks, ...devFrameworks])];
+        if (allFrameworks.length > 0) {
+          lines.push(`- 框架/工具: ${allFrameworks.join(', ')}`);
+        }
+
         if (deps.length > 0) lines.push(`- 生产依赖 (${deps.length}): ${deps.join(', ')}`);
         if (devDeps.length > 0) lines.push(`- 开发依赖 (${devDeps.length}): ${devDeps.join(', ')}`);
 
@@ -171,10 +236,42 @@ export async function scanProject(
     } else if (path === 'README.md' || path === 'README') {
       const truncated = content.length > 2000 ? content.slice(0, 2000) + '\n\n... (截断)' : content;
       contextParts.push(`## 现有 README\n${truncated}`);
+    } else if (path === 'LICENSE') {
+      const firstLine = content.split('\n')[0] || '';
+      contextParts.push(`## 许可证\n${firstLine}`);
     } else {
       // Config / manifest files
       contextParts.push(`## ${path}\n\`\`\`\n${content.slice(0, 800)}\n\`\`\``);
     }
+  }
+
+  // 7. Entry point scanning — fetch first ~30 lines of likely entry files
+  const entryCandidates = ['src/index.ts', 'src/index.js', 'src/main.ts', 'src/main.js',
+    'index.ts', 'index.js', 'main.ts', 'main.js', 'app/main.py', 'src/main.py',
+    'cmd/main.go', 'lib/main.dart', 'App.tsx', 'app.tsx', 'src/app.tsx',
+    'src/App.tsx', 'api/index.ts', 'src/api/index.ts',
+  ];
+  const foundEntries = entryCandidates.filter((p) => allPaths.has(p));
+  const entryContents = await Promise.all(
+    foundEntries.slice(0, 3).map((p) =>
+      fetchGitHubContent(owner, repo, p, branch).then((c) => ({ path: p, content: c }))
+    )
+  );
+  const entryParts: string[] = [];
+  for (const { path, content } of entryContents) {
+    if (!content) continue;
+    // Extract imports/exports only (first 30 lines)
+    const lines = content.split('\n').slice(0, 30);
+    // Filter for meaningful lines only (import, export, const, function, class, app., route)
+    const meaningful = lines.filter((l) =>
+      /^\s*(import|export|const|function|class|app\.|router|route|def |@app)/.test(l)
+    );
+    if (meaningful.length > 0) {
+      entryParts.push(`### ${path}\n\`\`\`\n${meaningful.join('\n')}\n\`\`\``);
+    }
+  }
+  if (entryParts.length > 0) {
+    contextParts.push(`## 入口文件分析\n${entryParts.join('\n\n')}`);
   }
 
   const result = contextParts.join('\n\n');

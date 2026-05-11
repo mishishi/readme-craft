@@ -2,7 +2,8 @@
   "name": "readme-craft",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n server,frontend -c blue,green \"npm run dev:server\" \"npm run dev:frontend\"",
+    "dev": "npm run kill:ports 2>/dev/null; concurrently -n server,frontend -c blue,green --kill-others \"npm run dev:server\" \"npm run dev:frontend\"",
+"kill:ports": "lsof -ti:3001 2>/dev/null | xargs kill -9 2>/dev/null; lsof -ti:5173 2>/dev/null | xargs kill -9 2>/dev/null; lsof -ti:5174 2>/dev/null | xargs kill -9 2>/dev/null",
     "dev:server": "cd server && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",

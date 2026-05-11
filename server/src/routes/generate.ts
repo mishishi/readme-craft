@@ -2,6 +2,17 @@ import type { FastifyInstance } from 'fastify';
 import { generateReadme } from '../services/minimax.js';
 import { buildSystemPrompt, buildUserPrompt } from '../services/prompts.js';
 import { scanProject } from '../services/project-scanner.js';
+import { trackEvent } from '../services/analytics.js';
+import {
+  validateOutput,
+  buildRefinePrompt,
+  minimalRules,
+  badgesRules,
+  enterpriseRules,
+  cardsRules,
+  showcaseRules,
+} from '../services/template-skeletons/index.js';
+import type { TemplateValidationRules } from '../services/template-skeletons/index.js';
 
 /** 清理 MiniMax 返回：去掉可能包裹的 markdown 代码块标记 */
 function cleanMarkdown(raw: string): string {
@@ -15,6 +26,15 @@ const GENERATE_CACHE_TTL = 30 * 60 * 1000; // 30 分钟
 function getGenerateCacheKey(owner: string, repo: string, templateId: string): string {
   return `gen:${owner}/${repo}:${templateId}`;
 }
+
+// 每个模板的验证规则
+const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
+  minimal: minimalRules,
+  badges: badgesRules,
+  enterprise: enterpriseRules,
+  cards: cardsRules,
+  showcase: showcaseRules,
+};
 
 interface GenerateBody {
   repoUrl: string;
@@ -68,15 +88,63 @@ export async function generateRoutes(app: FastifyInstance) {
       }
 
       const userPrompt = buildUserPrompt(repoInfo, projectContext);
-      const markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));
 
-      // Cache result
+      // --- 第一次生成 ---
+      let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));
+      let refined = false;
+
+      // --- 输出质量验证 + 修正 ---
+      const rules = VALIDATION_RULES[templateId];
+      if (rules) {
+        const validation = validateOutput(markdown, rules, templateId);
+
+        if (!validation.valid) {
+          console.log(`[validate] ${templateId} — 验证失败 (${validation.issues.length} 项), 尝试修正...`);
+
+          const refinePrompt = buildRefinePrompt(templateId, validation.issues);
+
+          try {
+            const refinedMarkdown = cleanMarkdown(
+              await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt)
+            );
+            const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
+            refined = true;
+            markdown = refinedMarkdown;
+
+            console.log(
+              `[validate] ${templateId} — 修正${refinedValidation.valid ? '通过' : '完成但仍有问题'}`
+              + ` (${refinedValidation.issues.length} 项残留)`
+            );
+
+            // 记录验证结果
+            trackEvent({
+              name: 'validation_result',
+              timestamp: Date.now(),
+              data: {
+                templateId,
+                firstTryIssues: validation.issues,
+                retryPassed: refinedValidation.valid,
+                retryRemainingIssues: refinedValidation.issues,
+              },
+            }).catch(() => {});
+          } catch (refineErr) {
+            console.warn('[validate] 修正调用失败，使用原始结果:', refineErr);
+            trackEvent({
+              name: 'validation_refine_failed',
+              timestamp: Date.now(),
+              data: { templateId, error: String(refineErr) },
+            }).catch(() => {});
+          }
+        }
+      }
+
+      // Cache final result
       if (repoInfo.owner && repoInfo.name) {
         const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
         generateCache.set(cacheKey, { markdown, expiresAt: Date.now() + GENERATE_CACHE_TTL });
       }
 
-      return { markdown };
+      return { markdown, refined };
     } catch (err) {
       const message = err instanceof Error ? err.message : '生成失败';
       console.error('Generate error:', err);

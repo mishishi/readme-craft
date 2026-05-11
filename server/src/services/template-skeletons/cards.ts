@@ -1,3 +1,22 @@
+import type { TemplateValidationRules } from './validation';
+
+export const cardsRules: TemplateValidationRules = {
+  mustContain: [
+    '> ',
+    '---',
+    '## ✨ 项目简介',
+    '## 🔥 核心特性',
+    '## 🚀 快速开始',
+    '## 📄 许可证',
+  ],
+  forbidden: [
+    '```markdown',
+    '[项目标语',
+  ],
+  maxPlaceholderResidue: 3,
+  minLength: 400,
+};
+
 export const cardsSkeleton = [
   '<div align="center">',
   '',

@@ -1,3 +1,26 @@
+import type { TemplateValidationRules } from './validation';
+
+export const badgesRules: TemplateValidationRules = {
+  mustContain: [
+    '<p align="center">',
+    '<img',
+    'shields.io',
+    '| 特性 | 说明 |',
+    '| 模块 | 说明 | 优先级 |',
+    '## 📖 项目简介',
+    '## 🚀 核心特性',
+    '## 📦 安装',
+  ],
+  forbidden: [
+    '[项目名称]',
+    '[项目标语',
+    '[特性名称]',
+    '```markdown',
+  ],
+  maxPlaceholderResidue: 1,
+  minLength: 500,
+};
+
 export const badgesSkeleton = [
   '<p align="center">',
   '  <img src="https://img.shields.io/badge/version-1.0.0-f59e0b?style=for-the-badge&logo=github" />',

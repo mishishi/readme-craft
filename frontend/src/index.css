@@ -119,3 +119,8 @@
   from { transform: translateX(-100%) scaleX(0.3); }
   to { transform: translateX(400%) scaleX(0.3); }
 }
+
+/* 隐藏滚动条（横向滚动容器） */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -7,6 +7,7 @@ import RepoInput from './components/RepoInput';
 import RepoInfoCard from './components/RepoInfoCard';
 import TemplateSelector from './components/TemplateSelector';
 import GenerateSection from './components/GenerateSection';
+import ShowcaseSection from './components/ShowcaseSection';
 import Modal from './components/Modal';
 import EditWorkspace from './components/EditWorkspace';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
@@ -82,6 +83,7 @@ function HomePage() {
   return (
     <section>
       <HeroSection />
+      <ShowcaseSection />
       <div className="mx-auto mt-6 max-w-2xl">
         <RepoInput disabled={false} />
         <RepoInfoCard />

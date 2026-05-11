@@ -1,3 +1,24 @@
+import type { TemplateValidationRules } from './validation';
+
+export const showcaseRules: TemplateValidationRules = {
+  mustContain: [
+    '<p align="center">',
+    '<img',
+    '## 💡 项目简介',
+    '### ',
+    '- [',
+    '- [x]',
+    '> ',
+    '## 📄 许可证',
+  ],
+  forbidden: [
+    '```markdown',
+    '[项目简称 Banner',
+  ],
+  maxPlaceholderResidue: 3,
+  minLength: 500,
+};
+
 export const showcaseSkeleton = [
   '<p align="center">',
   '  <img src="https://via.placeholder.com/900x240/1a1a2e/e0e0e0?text=[项目简称 Banner]" alt="[项目名称] Banner" width="100%" />',

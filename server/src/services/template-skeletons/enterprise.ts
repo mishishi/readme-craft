@@ -1,3 +1,25 @@
+import type { TemplateValidationRules } from './validation';
+
+export const enterpriseRules: TemplateValidationRules = {
+  mustContain: [
+    '## 项目简介',
+    '## 核心特性',
+    '| 功能模块 | 说明 | 适用场景 |',
+    '## 技术栈',
+    '## 安装',
+    '## 使用',
+    '## 许可证',
+  ],
+  forbidden: [
+    '```mermaid',
+    '😊',
+    '```markdown',
+    '[项目名称]（未替换',
+  ],
+  maxPlaceholderResidue: 0,
+  minLength: 600,
+};
+
 export const enterpriseSkeleton = [
   '<div align="center">',
   '',

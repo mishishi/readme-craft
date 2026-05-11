@@ -1,3 +1,29 @@
+import type { TemplateValidationRules } from './validation';
+
+export const minimalRules: TemplateValidationRules = {
+  mustContain: [
+    '# ',
+    '## 简介',
+    '## 特性',
+    '## 安装',
+    '## 使用',
+    '## 许可证',
+  ],
+  forbidden: [
+    '<div',
+    '<p align',
+    '<img',
+    '<details',
+    '<summary',
+    'shields.io',
+    '|',
+    '> ',
+    '```markdown',
+  ],
+  maxPlaceholderResidue: 2,
+  minLength: 300,
+};
+
 export const minimalSkeleton = [
   '# [项目名称]',
   '',

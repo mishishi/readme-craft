@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 tsx watch src/index.ts",
+    "dev": "lsof -ti:3001 | xargs kill -9 2>/dev/null; NODE_TLS_REJECT_UNAUTHORIZED=0 tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },

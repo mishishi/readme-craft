@@ -8,6 +8,14 @@ function cleanMarkdown(raw: string): string {
   return raw.replace(/^```markdown\s*\n?/i, '').replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
 }
 
+// 生成结果缓存（内存）
+const generateCache = new Map<string, { markdown: string; expiresAt: number }>();
+const GENERATE_CACHE_TTL = 30 * 60 * 1000; // 30 分钟
+
+function getGenerateCacheKey(owner: string, repo: string, templateId: string): string {
+  return `gen:${owner}/${repo}:${templateId}`;
+}
+
 interface GenerateBody {
   repoUrl: string;
   templateId: string;
@@ -31,10 +39,20 @@ export async function generateRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: '缺少必要参数' });
     }
 
+    // Check cache
+    if (repoInfo.owner && repoInfo.name) {
+      const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
+      const cached = generateCache.get(cacheKey);
+      if (cached && Date.now() < cached.expiresAt) {
+        console.log(`[cache] HIT ${cacheKey}`);
+        return { markdown: cached.markdown };
+      }
+    }
+
     const systemPrompt = buildSystemPrompt(templateId);
 
     try {
-      // Scan project files for richer context
+      // Scan project files for richer context (may be cached from pre-scan)
       let projectContext: string | undefined;
       if (repoInfo.owner && repoInfo.name && repoInfo.defaultBranch) {
         try {
@@ -51,6 +69,13 @@ export async function generateRoutes(app: FastifyInstance) {
 
       const userPrompt = buildUserPrompt(repoInfo, projectContext);
       const markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));
+
+      // Cache result
+      if (repoInfo.owner && repoInfo.name) {
+        const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
+        generateCache.set(cacheKey, { markdown, expiresAt: Date.now() + GENERATE_CACHE_TTL });
+      }
+
       return { markdown };
     } catch (err) {
       const message = err instanceof Error ? err.message : '生成失败';

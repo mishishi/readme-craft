@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
+import { preScanProject } from '../services/api';
 
 const SAMPLE_REPO = 'https://github.com/chalk/chalk';
 
@@ -25,6 +26,11 @@ export default function RepoInput({ disabled }: Props) {
     try {
       const info = await fetchRepoInfo(target);
       dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
+      // Background pre-scan for faster generation
+      const parsed = info.fullName.split('/');
+      if (parsed.length === 2) {
+        preScanProject(parsed[0], parsed[1], info.defaultBranch);
+      }
     } catch (err) {
       dispatch({
         type: 'FETCH_REPO_ERROR',

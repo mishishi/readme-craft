@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { generateRoutes } from './routes/generate.js';
 import { repoRoutes } from './routes/repo.js';
+import { preScanRoutes } from './routes/pre-scan.js';
 
 const port = parseInt(process.env.PORT || '3001', 10);
 
@@ -12,6 +13,7 @@ await app.register(cors, { origin: true });
 
 await app.register(generateRoutes, { prefix: '/api' });
 await app.register(repoRoutes, { prefix: '/api' });
+await app.register(preScanRoutes, { prefix: '/api' });
 
 app.get('/api/health', async () => ({ status: 'ok' }));
 

@@ -199,7 +199,7 @@ export default function TemplateSelector() {
   const { state, dispatch } = useApp();
 
   return (
-    <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    <div id="template-selector" className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {templates.map((t) => {
         const selected = state.selectedTemplate === t.id;
         const rec = recommendations[t.id];

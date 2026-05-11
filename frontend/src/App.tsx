@@ -89,7 +89,12 @@ function HomePage() {
         <RepoInput disabled={false} />
         <RepoInfoCard />
       </div>
-      <TemplateSelector />
+
+      {/* 选模板：仅当仓库信息加载后展示，减少首屏认知负荷 */}
+      <div className={state.repoInfo ? 'animate-fade-in-up' : 'hidden'}>
+        <TemplateSelector />
+      </div>
+
       <GenerateSection />
     </section>
   );

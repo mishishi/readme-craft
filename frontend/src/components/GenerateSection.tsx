@@ -53,6 +53,17 @@ export default function GenerateSection() {
     };
   }, [state.generating]);
 
+  // Watch state.showResultCard — set when generation is triggered externally (Demo / Showcase)
+  useEffect(() => {
+    if (state.showResultCard && state.sections.length > 0) {
+      setShowResult(true);
+      // Auto-scroll result card into view
+      setTimeout(() => {
+        document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [state.showResultCard, state.sections.length]);
+
   const getMarkdown = useCallback(
     () => assembleMarkdown(state.title, state.preamble, state.sections),
     [state.title, state.preamble, state.sections]
@@ -101,14 +112,16 @@ export default function GenerateSection() {
   }, [getMarkdown, state.title, dispatch]);
 
   const handleEnterEditor = useCallback(() => {
+    dispatch({ type: 'HIDE_RESULT_CARD' });
     navigate('/editor', { state: { fromGeneration: true } });
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   const handleSwitchTemplate = useCallback(() => {
     setShowResult(false);
+    dispatch({ type: 'HIDE_RESULT_CARD' });
     setError(null);
     document.getElementById('template-selector')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+  }, [dispatch]);
 
   const template = state.selectedTemplate ? templates.find((t) => t.id === state.selectedTemplate) : null;
   const sectionCount = state.sections.length;
@@ -129,6 +142,7 @@ export default function GenerateSection() {
     const signal = abortRef.current.signal;
 
     dispatch({ type: 'GENERATE_START' });
+    dispatch({ type: 'HIDE_RESULT_CARD' });
     setError(null);
     setShowResult(false);
     trackEvent('generation_started', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName });
@@ -158,6 +172,10 @@ export default function GenerateSection() {
       });
       trackEvent('generation_succeeded', { templateId: state.selectedTemplate, repo: state.repoInfo.fullName, sectionCount: sections.length });
       setShowResult(true);
+      // Auto-scroll result card into view
+      setTimeout(() => {
+        document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         return; // 用户取消，不做任何处理

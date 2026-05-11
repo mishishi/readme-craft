@@ -18,6 +18,7 @@ const initialState: AppState = {
   toasts: [],
   activeSectionId: null,
   collapsedSections: [],
+  showResultCard: false,
   history: [],
   historyIndex: -1,
 };
@@ -58,7 +59,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SELECT_TEMPLATE':
       return { ...state, selectedTemplate: action.payload };
     case 'GENERATE_START':
-      return { ...state, generating: true, generateError: null };
+      return { ...state, generating: true, generateError: null, showResultCard: false };
     case 'GENERATE_SUCCESS': {
       const genHistory = pushHistory(state);
       return {
@@ -107,7 +108,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, toast: null, toasts: state.toasts.slice(1) };
     }
     case 'CLEAR_CONTENT':
-      return { ...state, sections: [], title: '', preamble: '', generating: false, generateError: null };
+      return { ...state, sections: [], title: '', preamble: '', generating: false, generateError: null, showResultCard: false };
     case 'ADD_SECTION': {
       const addHistory = pushHistory(state);
       const newSection = {
@@ -180,6 +181,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         historyIndex: state.historyIndex + 1,
       };
     }
+    case 'SHOW_RESULT_CARD':
+      return { ...state, showResultCard: true };
+    case 'HIDE_RESULT_CARD':
+      return { ...state, showResultCard: false };
     case 'RESET':
       try { sessionStorage.removeItem(SESSION_KEY); } catch {}
       return initialState;
@@ -218,7 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       try {
-        const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, history, historyIndex, ...persistable } = state;
+        const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, showResultCard, history, historyIndex, ...persistable } = state;
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(persistable));
       } catch {}
     });

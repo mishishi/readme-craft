@@ -26,7 +26,9 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [feedbackCycle, setFeedbackCycle] = useState(0);
   const [diffSectionIds, setDiffSectionIds] = useState<Set<string>>(new Set());
+  const [lastFeedbackText, setLastFeedbackText] = useState('');
   const prevSectionsRef = useRef<{ content: string }[]>([]);
+  const postRegenSectionsRef = useRef<{ content: string }[]>([]);
 
   const sectionCount = state.sections.length;
   const templateName = templates.find((t) => t.id === state.selectedTemplate)?.name;
@@ -82,6 +84,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
 
   const handleFeedbackSubmit = useCallback(async () => {
     if (!feedbackText.trim() || regenerating) return;
+    setLastFeedbackText(feedbackText.trim());
     await handleRegenerate(feedbackText.trim());
     setFeedbackText('');
     setShowFeedbackInput(false);
@@ -100,9 +103,26 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
       }
     });
     setDiffSectionIds(changed);
-    const timer = setTimeout(() => setDiffSectionIds(new Set()), 5000);
-    return () => clearTimeout(timer);
+    // Save post-regeneration content for user-edit detection
+    postRegenSectionsRef.current = state.sections.map(s => ({ content: s.content }));
   }, [feedbackCycle]);
+
+  // Clear diff markers when user edits a section (content differs from post-regeneration state)
+  useEffect(() => {
+    if (diffSectionIds.size === 0 || postRegenSectionsRef.current.length === 0) return;
+
+    state.sections.forEach(s => {
+      const idx = state.sections.findIndex(p => p.id === s.id);
+      const prevContent = postRegenSectionsRef.current[idx]?.content;
+      if (prevContent !== undefined && prevContent !== s.content && diffSectionIds.has(s.id)) {
+        setDiffSectionIds(prev => {
+          const next = new Set(prev);
+          next.delete(s.id);
+          return next;
+        });
+      }
+    });
+  }, [state.sections, diffSectionIds]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-100">
@@ -223,7 +243,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
               </div>
             </div>
           ) : (
-            /* 反馈输入区（样式不变，保留原有结构） */
+            /* 反馈输入区 */
             <div className="mx-auto max-w-xl">
               <div className="mb-2 flex items-center justify-between">
                 <label className="text-xs font-medium text-indigo-700">
@@ -233,6 +253,12 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
                   基于你的反馈重新生成
                 </span>
               </div>
+              {/* 显示上一次的反馈内容，帮助建立上下文 */}
+              {lastFeedbackText && (
+                <div className="mb-2 rounded-md border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-600">
+                  上次反馈：{lastFeedbackText}
+                </div>
+              )}
               <textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
@@ -248,7 +274,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
               />
               <div className="mt-2 flex items-center justify-between">
                 <p className="text-[10px] text-gray-400">
-                  <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 font-mono text-[9px]">⌘↵</kbd> 快速发送
+                  <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 font-mono text-[9px]">⌘↵</kbd> / <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 font-mono text-[9px]">Ctrl+Enter</kbd> 快速发送
                 </p>
                 <div className="flex items-center gap-2">
                   <button
@@ -284,6 +310,19 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
             </div>
           )}
         </div>
+      )}
+
+      {/* 浮动反馈按钮 — 反馈栏 dismiss 后固定在右下角 */}
+      {fromGeneration && feedbackDismissed && (
+        <button
+          onClick={() => { setFeedbackDismissed(false); setShowFeedbackInput(true); }}
+          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl active:scale-95"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+          </svg>
+          反馈
+        </button>
       )}
 
       {/* 状态栏 */}

@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
 import { preScanProject, generateReadme } from '../services/api';
@@ -11,7 +10,6 @@ const DEMO_TEMPLATE = 'badges';
 
 export default function HeroSection() {
   const { dispatch } = useApp();
-  const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState(false);
 
   const handleDemo = useCallback(async () => {
@@ -75,12 +73,17 @@ export default function HeroSection() {
         sectionCount: sections.length,
       });
 
+      // 展示结果卡片而非直接跳转编辑器 — 统一所有入口的用户体验
+      dispatch({ type: 'SHOW_RESULT_CARD' });
       dispatch({
         type: 'SHOW_TOAST',
-        payload: { message: 'Demo README 已生成，正在跳转到编辑页面', type: 'success' },
+        payload: { message: 'Demo README 已生成，可进入编辑或预览章节', type: 'success' },
       });
 
-      navigate('/editor', { state: { fromGeneration: true } });
+      // 滚动到结果卡片
+      setTimeout(() => {
+        document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       const msg = err instanceof Error ? err.message : 'Demo 生成失败';
@@ -92,7 +95,7 @@ export default function HeroSection() {
     } finally {
       setDemoLoading(false);
     }
-  }, [dispatch, navigate, demoLoading]);
+  }, [dispatch, demoLoading]);
 
   return (
     <div className="relative overflow-hidden">

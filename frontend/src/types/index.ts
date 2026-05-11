@@ -43,6 +43,7 @@ export interface AppState {
   toasts: { id: string; message: string; type: 'success' | 'error' }[];
   activeSectionId: string | null;
   collapsedSections: string[];
+  showResultCard: boolean;
   history: { title: string; preamble: string; sections: Section[] }[];
   historyIndex: number;
 }
@@ -83,4 +84,6 @@ export type AppAction =
   | { type: 'SET_COLLAPSED'; payload: { id: string; collapsed: boolean } }
   | { type: 'UNDO' }
   | { type: 'REDO' }
+  | { type: 'SHOW_RESULT_CARD' }
+  | { type: 'HIDE_RESULT_CARD' }
   | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[]; templateId: string } };

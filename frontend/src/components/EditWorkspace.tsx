@@ -1,18 +1,60 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
+import { generateReadme } from '../services/api';
+import { parseSections } from '../services/markdown';
 import EditorPanel from './EditorPanel';
 import PreviewPanel from './PreviewPanel';
 import ActionBar from './ActionBar';
 
 export default function EditWorkspace() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [tab, setTab] = useState<'editor' | 'preview'>('editor');
+  const [regenerating, setRegenerating] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const sectionCount = state.sections.length;
   const templateName = templates.find((t) => t.id === state.selectedTemplate)?.name;
   const totalChars = state.sections.reduce((sum, s) => sum + s.content.length, 0) + state.title.length;
   const readTimeMinutes = Math.max(1, Math.round(totalChars / 500));
+
+  const handleRegenerate = useCallback(async () => {
+    if (!state.selectedTemplate || !state.repoInfo || regenerating) return;
+
+    abortRef.current = new AbortController();
+    setRegenerating(true);
+
+    try {
+      const markdown = await generateReadme({
+        repoUrl: state.repoUrl,
+        templateId: state.selectedTemplate,
+        repoInfo: state.repoInfo,
+      }, abortRef.current.signal);
+
+      const { sections } = parseSections(markdown);
+      dispatch({
+        type: 'GENERATE_SUCCESS',
+        payload: {
+          title: state.repoInfo.name,
+          sections: sections.length > 0 ? sections : [
+            { id: crypto.randomUUID(), heading: '简介', content: markdown },
+          ],
+        },
+      });
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: 'README 已重新生成', type: 'success' },
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: err instanceof Error ? err.message : '重新生成失败', type: 'error' },
+      });
+    } finally {
+      setRegenerating(false);
+    }
+  }, [state.selectedTemplate, state.repoInfo, state.repoUrl, state.title, regenerating, dispatch]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-100">
@@ -53,6 +95,26 @@ export default function EditWorkspace() {
         </div>
 
         <ActionBar />
+
+        {/* 重新生成按钮 */}
+        <button
+          onClick={handleRegenerate}
+          disabled={regenerating}
+          className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50"
+          title="重新生成 README 内容"
+        >
+          {regenerating ? (
+            <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+          )}
+          {regenerating ? '生成中...' : '重新生成'}
+        </button>
       </div>
 
       {/* 编辑 + 预览内容区 */}
@@ -76,14 +138,13 @@ export default function EditWorkspace() {
             <>
               <span className="text-gray-200">|</span>
               <span>{totalChars} 字符</span>
-              <span className="text-gray-200">|</span>
-              <span>约 {readTimeMinutes} 分钟阅读</span>
             </>
           )}
         </div>
         {templateName && (
-          <span>
-            模板 · <span className="text-gray-500">{templateName}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-gray-200">模板</span>
+            <span className="rounded bg-indigo-50 px-1.5 py-0.5 font-medium text-indigo-600">{templateName}</span>
           </span>
         )}
       </div>

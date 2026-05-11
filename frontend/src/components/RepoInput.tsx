@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
 
@@ -8,6 +9,7 @@ interface Props {
 
 export default function RepoInput({ disabled }: Props) {
   const { state, dispatch } = useApp();
+  const navigate = useNavigate();
   const [localUrl, setLocalUrl] = useState(state.repoUrl);
 
   const isValidUrl = /^(https?:\/\/)?(www\.)?github\.com\/[\w.-]+\/[\w.-]+/.test(localUrl.trim());
@@ -21,7 +23,7 @@ export default function RepoInput({ disabled }: Props) {
     try {
       const info = await fetchRepoInfo(localUrl.trim());
       dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
-      dispatch({ type: 'SET_STEP', payload: 'template' });
+      navigate('/templates');
     } catch (err) {
       dispatch({
         type: 'FETCH_REPO_ERROR',

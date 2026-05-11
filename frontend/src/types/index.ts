@@ -28,10 +28,7 @@ export interface TemplateDef {
   };
 }
 
-export type Step = 'input' | 'template' | 'edit';
-
 export interface AppState {
-  step: Step;
   repoUrl: string;
   repoInfo: RepoInfo | null;
   repoLoading: boolean;
@@ -41,9 +38,12 @@ export interface AppState {
   generateError: string | null;
   title: string;
   sections: Section[];
-  toast: { message: string; type: 'success' | 'error' } | null;
+  toast: { id?: string; message: string; type: 'success' | 'error' } | null;
+  toasts: { id: string; message: string; type: 'success' | 'error' }[];
   activeSectionId: string | null;
   collapsedSections: string[];
+  history: { title: string; sections: Section[] }[];
+  historyIndex: number;
 }
 
 export type AppAction =
@@ -58,15 +58,15 @@ export type AppAction =
   | { type: 'SET_TITLE'; payload: string }
   | { type: 'UPDATE_SECTION'; payload: { id: string; content: string } }
   | { type: 'UPDATE_SECTION_HEADING'; payload: { id: string; heading: string } }
-  | { type: 'SET_STEP'; payload: Step }
-  | { type: 'SHOW_TOAST'; payload: { message: string; type: 'success' | 'error' } }
-  | { type: 'DISMISS_TOAST' }
+  | { type: 'SHOW_TOAST'; payload: { message: string; type: 'success' | 'error'; id?: string } }
+  | { type: 'DISMISS_TOAST'; payload?: string }
   | { type: 'RESET' }
-  | { type: 'BACK_TO_INPUT' }
-  | { type: 'BACK_TO_TEMPLATE' }
+  | { type: 'CLEAR_CONTENT' }
   | { type: 'SET_ACTIVE_SECTION'; payload: string | null }
   | { type: 'ADD_SECTION'; payload?: { heading?: string } }
   | { type: 'DELETE_SECTION'; payload: { id: string } }
   | { type: 'MOVE_SECTION'; payload: { id: string; direction: 'up' | 'down' } }
   | { type: 'MOVE_SECTION_TO'; payload: { id: string; toIndex: number } }
-  | { type: 'SET_COLLAPSED'; payload: { id: string; collapsed: boolean } };
+  | { type: 'SET_COLLAPSED'; payload: { id: string; collapsed: boolean } }
+  | { type: 'UNDO' }
+  | { type: 'REDO' };

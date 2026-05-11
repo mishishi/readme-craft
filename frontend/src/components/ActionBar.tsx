@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { assembleMarkdown } from '../services/markdown';
 
@@ -10,6 +10,8 @@ export default function ActionBar() {
     () => assembleMarkdown(state.title, state.sections),
     [state.title, state.sections]
   );
+
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCopy = useCallback(async () => {
     const text = getMarkdown();
@@ -27,12 +29,15 @@ export default function ActionBar() {
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
-    setCopying(false);
-    dispatch({
-      type: 'SHOW_TOAST',
-      payload: { message: '已复制到剪贴板', type: 'success' },
-    });
-    setTimeout(() => dispatch({ type: 'DISMISS_TOAST' }), 4000);
+    // 确保 spinner 至少可见 300ms
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopying(false);
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: '已复制到剪贴板', type: 'success' },
+      });
+    }, 300);
   }, [getMarkdown, dispatch]);
 
   const handleDownload = useCallback(() => {
@@ -50,7 +55,6 @@ export default function ActionBar() {
       type: 'SHOW_TOAST',
       payload: { message: 'README 已下载', type: 'success' },
     });
-    setTimeout(() => dispatch({ type: 'DISMISS_TOAST' }), 4000);
   }, [getMarkdown, state.repoInfo, dispatch]);
 
   return (
@@ -58,7 +62,7 @@ export default function ActionBar() {
       <button
         onClick={handleCopy}
         disabled={copying}
-        className="btn-secondary text-sm min-w-[4.5rem] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        className="btn-secondary text-sm min-w-[4.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         title="复制到剪贴板"
       >
         {copying ? (
@@ -67,17 +71,22 @@ export default function ActionBar() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         ) : (
-          '📋'
-        )}{' '}
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+          </svg>
+        )}
         复制
       </button>
       <button
         onClick={handleDownload}
         data-shortcut="download"
-        className="btn-primary text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        className="btn-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         title="下载 README（Ctrl+S）"
       >
-        ⬇️ 下载 .md
+        <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        下载 .md
       </button>
     </div>
   );

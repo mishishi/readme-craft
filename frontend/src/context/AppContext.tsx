@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useReducer, type ReactNode } from
 import type { AppState, AppAction } from '../types';
 
 const initialState: AppState = {
-  step: 'input',
   repoUrl: '',
   repoInfo: null,
   repoLoading: false,
@@ -13,8 +12,11 @@ const initialState: AppState = {
   title: '',
   sections: [],
   toast: null,
+  toasts: [],
   activeSectionId: null,
   collapsedSections: [],
+  history: [],
+  historyIndex: -1,
 };
 
 const SESSION_KEY = 'readme-craft-state';
@@ -24,10 +26,20 @@ function loadInitialState(): AppState {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as AppState;
-      return { ...parsed, collapsedSections: parsed.collapsedSections ?? [], repoLoading: false, repoError: null, generating: false, generateError: null, toast: null };
+      return { ...parsed, collapsedSections: parsed.collapsedSections ?? [], history: [], historyIndex: -1, repoLoading: false, repoError: null, generating: false, generateError: null, toast: null, toasts: [] };
     }
   } catch {}
   return initialState;
+}
+
+const MAX_HISTORY = 50;
+
+function pushHistory(state: AppState): { history: AppState['history']; historyIndex: number } {
+  const snapshot = { title: state.title, sections: state.sections };
+  const history = state.history.slice(0, state.historyIndex + 1);
+  history.push(snapshot);
+  while (history.length > MAX_HISTORY) history.shift();
+  return { history, historyIndex: history.length - 1 };
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -44,76 +56,113 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, selectedTemplate: action.payload };
     case 'GENERATE_START':
       return { ...state, generating: true, generateError: null };
-    case 'GENERATE_SUCCESS':
+    case 'GENERATE_SUCCESS': {
+      const genHistory = pushHistory(state);
       return {
         ...state,
+        ...genHistory,
         generating: false,
         title: action.payload.title,
         sections: action.payload.sections,
-        step: 'edit' as const,
       };
+    }
     case 'GENERATE_ERROR':
-      return { ...state, generating: false, generateError: action.payload, step: 'template' as const };
-    case 'SET_TITLE':
-      return { ...state, title: action.payload };
-    case 'UPDATE_SECTION':
+      return { ...state, generating: false, generateError: action.payload };
+    case 'SET_TITLE': {
+      const titleHistory = pushHistory(state);
+      return { ...state, ...titleHistory, title: action.payload };
+    }
+    case 'UPDATE_SECTION': {
+      const updHistory = pushHistory(state);
       return {
         ...state,
+        ...updHistory,
         sections: state.sections.map((s) =>
           s.id === action.payload.id ? { ...s, content: action.payload.content } : s
         ),
       };
-    case 'UPDATE_SECTION_HEADING':
+    }
+    case 'UPDATE_SECTION_HEADING': {
+      const headingHistory = pushHistory(state);
       return {
         ...state,
+        ...headingHistory,
         sections: state.sections.map((s) =>
           s.id === action.payload.id ? { ...s, heading: action.payload.heading } : s
         ),
       };
-    case 'SET_STEP':
-      return { ...state, step: action.payload };
-    case 'SHOW_TOAST':
-      return { ...state, toast: action.payload };
-    case 'DISMISS_TOAST':
-      return { ...state, toast: null };
-    case 'BACK_TO_INPUT':
-      return { ...state, step: 'input', sections: [], title: '', generating: false, generateError: null };
-    case 'BACK_TO_TEMPLATE':
-      return { ...state, step: 'template', generating: false, generateError: null };
+    }
+    case 'SHOW_TOAST': {
+      const id = action.payload.id || crypto.randomUUID();
+      return { ...state, toast: { ...action.payload, id }, toasts: [...state.toasts, { ...action.payload, id }] };
+    }
+    case 'DISMISS_TOAST': {
+      if (action.payload) {
+        return { ...state, toasts: state.toasts.filter((t) => t.id !== action.payload), toast: state.toast?.id === action.payload ? null : state.toast };
+      }
+      return { ...state, toast: null, toasts: state.toasts.slice(1) };
+    }
+    case 'CLEAR_CONTENT':
+      return { ...state, sections: [], title: '', generating: false, generateError: null };
     case 'ADD_SECTION': {
+      const addHistory = pushHistory(state);
       const newSection = {
         id: crypto.randomUUID(),
         heading: action.payload?.heading || '新章节',
         content: '',
       };
-      return { ...state, sections: [...state.sections, newSection] };
+      return { ...state, ...addHistory, sections: [...state.sections, newSection] };
     }
-    case 'DELETE_SECTION':
-      return { ...state, sections: state.sections.filter((s) => s.id !== action.payload.id) };
+    case 'DELETE_SECTION': {
+      const delHistory = pushHistory(state);
+      return { ...state, ...delHistory, sections: state.sections.filter((s) => s.id !== action.payload.id) };
+    }
     case 'MOVE_SECTION': {
+      const moveHistory = pushHistory(state);
       const idx = state.sections.findIndex((s) => s.id === action.payload.id);
       if (idx === -1) return state;
       const sections = [...state.sections];
       const targetIdx = action.payload.direction === 'up' ? idx - 1 : idx + 1;
       if (targetIdx < 0 || targetIdx >= sections.length) return state;
       [sections[idx], sections[targetIdx]] = [sections[targetIdx], sections[idx]];
-      return { ...state, sections };
+      return { ...state, ...moveHistory, sections };
     }
     case 'SET_ACTIVE_SECTION':
       return { ...state, activeSectionId: action.payload };
     case 'MOVE_SECTION_TO': {
+      const moveToHistory = pushHistory(state);
       const fromIdx = state.sections.findIndex((s) => s.id === action.payload.id);
       if (fromIdx === -1) return state;
       const sections = [...state.sections];
       const [removed] = sections.splice(fromIdx, 1);
       sections.splice(action.payload.toIndex, 0, removed);
-      return { ...state, sections };
+      return { ...state, ...moveToHistory, sections };
     }
     case 'SET_COLLAPSED': {
       const collapsedSections = action.payload.collapsed
         ? [...state.collapsedSections, action.payload.id]
         : state.collapsedSections.filter((id) => id !== action.payload.id);
       return { ...state, collapsedSections };
+    }
+    case 'UNDO': {
+      if (state.historyIndex < 0) return state;
+      const prevSnapshot = state.history[state.historyIndex];
+      return {
+        ...state,
+        title: prevSnapshot.title,
+        sections: prevSnapshot.sections,
+        historyIndex: state.historyIndex - 1,
+      };
+    }
+    case 'REDO': {
+      if (state.historyIndex >= state.history.length - 1) return state;
+      const nextSnapshot = state.history[state.historyIndex + 1];
+      return {
+        ...state,
+        title: nextSnapshot.title,
+        sections: nextSnapshot.sections,
+        historyIndex: state.historyIndex + 1,
+      };
     }
     case 'RESET':
       try { sessionStorage.removeItem(SESSION_KEY); } catch {}
@@ -135,7 +184,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const { toast, repoLoading, repoError, generating, generateError, activeSectionId, ...persistable } = state;
+      const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, history, historyIndex, ...persistable } = state;
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(persistable));
     } catch {}
   }, [state]);

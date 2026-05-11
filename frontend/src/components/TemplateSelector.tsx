@@ -2,7 +2,7 @@ import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
 
 /** 每个模板的视觉预览小样 — 展示实际排版风格 */
-function TemplatePreview({ id }: { id: string; accent: string }) {
+export function TemplatePreview({ id }: { id: string; accent?: string }) {
   switch (id) {
     case 'minimal':
       return (
@@ -172,18 +172,27 @@ function TemplatePreview({ id }: { id: string; accent: string }) {
   }
 }
 
+const recommendations: Record<string, string> = {
+  minimal: '基础项目',
+  badges: '开源项目',
+  enterprise: '商业项目',
+  cards: '前端项目',
+  showcase: '作品展示',
+};
+
 export default function TemplateSelector() {
   const { state, dispatch } = useApp();
 
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {templates.map((t) => {
         const selected = state.selectedTemplate === t.id;
+        const rec = recommendations[t.id];
         return (
           <button
             key={t.id}
             onClick={() => dispatch({ type: 'SELECT_TEMPLATE', payload: t.id })}
-            className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] ${
+            className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
               selected
                 ? 'border-indigo-500 bg-indigo-50 shadow-md ring-1 ring-indigo-500/20'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
@@ -214,6 +223,11 @@ export default function TemplateSelector() {
               <p className="mt-0.5 text-xs leading-relaxed text-gray-500">
                 {t.description}
               </p>
+              {rec && (
+                <span className="mt-1.5 inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
+                  推荐：{rec}
+                </span>
+              )}
             </div>
 
             {/* 选中指示器 */}

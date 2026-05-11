@@ -107,6 +107,7 @@ export default function Header() {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
           <button
             onClick={handleLogoClick}
+            title="返回首页"
             className="flex items-center gap-2.5 text-lg font-bold text-gray-900 transition-opacity hover:opacity-80"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-xs text-white shadow-sm">

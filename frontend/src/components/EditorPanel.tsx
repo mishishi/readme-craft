@@ -114,14 +114,16 @@ export default function EditorPanel() {
                     <div className="h-0.5 flex-1 rounded-full bg-indigo-300" />
                   </div>
                 )}
-                <SectionEditor
-                  section={section}
-                  isFirst={idx === 0}
-                  isLast={idx === sectionCount - 1}
-                  total={sectionCount}
-                  sectionIndex={idx}
-                  onDragStart={handleDragStart}
-                />
+                <div className={`${dragOver?.index === idx ? 'ring-2 ring-indigo-300 ring-offset-1 rounded-lg' : ''}`}>
+                  <SectionEditor
+                    section={section}
+                    isFirst={idx === 0}
+                    isLast={idx === sectionCount - 1}
+                    total={sectionCount}
+                    sectionIndex={idx}
+                    onDragStart={handleDragStart}
+                  />
+                </div>
                 {dragOver?.index === idx && dragOver.position === 'after' && (
                   <div className="flex items-center gap-2 py-1">
                     <div className="h-0.5 flex-1 rounded-full bg-indigo-300" />

@@ -250,7 +250,11 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
         onDragStart={(e) => {
           e.dataTransfer.setData('text/section-id', section.id);
           e.dataTransfer.effectAllowed = 'move';
+          (e.currentTarget as HTMLElement).classList.add('opacity-40');
           onDragStart(sectionIndex);
+        }}
+        onDragEnd={(e) => {
+          (e.currentTarget as HTMLElement).classList.remove('opacity-40');
         }}
       >
         {/* Drag handle */}
@@ -312,7 +316,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); handleHeadingStartEdit(); } }}
                   role="button"
                   tabIndex={0}
-                  className="cursor-pointer rounded p-0.5 text-gray-400 opacity-0 transition-all hover:bg-indigo-50 hover:text-indigo-500 group-hover:opacity-100"
+                  className="cursor-pointer rounded p-0.5 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 sm:opacity-0 sm:group-hover:opacity-100"
                   title="编辑标题"
                   aria-label="编辑标题"
                 >

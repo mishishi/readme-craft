@@ -88,7 +88,7 @@ function Toast({ id, message, type, onClose }: { id: string; message: string; ty
 
   useEffect(() => {
     if (paused) return;
-    const timer = setTimeout(() => onClose(id), 4000);
+    const timer = setTimeout(() => onClose(id), 6000);
     return () => clearTimeout(timer);
   }, [id, onClose, paused]);
 
@@ -159,7 +159,8 @@ function InputPage() {
   return (
     <section>
       <HeroSection />
-      <div className="mx-auto mt-10 max-w-2xl">
+      <StepIndicator />
+      <div className="mx-auto mt-6 max-w-2xl">
         <RepoInput disabled={false} />
         <RepoInfoCard />
       </div>
@@ -172,6 +173,7 @@ function TemplatePage() {
   const navigate = useNavigate();
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const backTriggerRef = useRef<HTMLElement | null>(null);
+  const confirmModalRef = useRef<HTMLDivElement>(null);
 
   const handleBack = () => {
     backTriggerRef.current = document.activeElement as HTMLElement;
@@ -188,6 +190,35 @@ function TemplatePage() {
     requestAnimationFrame(() => backTriggerRef.current?.focus());
   }, []);
 
+  useEffect(() => {
+    if (!showBackConfirm) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeBackConfirm(); return; }
+      if (e.key !== 'Tab') return;
+      const modal = confirmModalRef.current;
+      if (!modal) return;
+      const focusable = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    requestAnimationFrame(() => {
+      const buttons = confirmModalRef.current?.querySelectorAll<HTMLButtonElement>('button');
+      buttons?.[buttons.length - 1]?.focus();
+    });
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showBackConfirm, closeBackConfirm]);
+
   const confirmBack = () => {
     dispatch({ type: 'CLEAR_CONTENT' });
     setShowBackConfirm(false);
@@ -196,6 +227,7 @@ function TemplatePage() {
 
   return (
     <section className="mb-8">
+      <StepIndicator />
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center gap-3">
           <h2 className="text-lg font-semibold text-gray-900">GitHub 仓库</h2>
@@ -216,7 +248,13 @@ function TemplatePage() {
       <GenerateSection />
 
       {showBackConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div
+          ref={confirmModalRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="确认返回"
+        >
           <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -241,6 +279,7 @@ function EditorPage() {
   const navigate = useNavigate();
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const backTriggerRef = useRef<HTMLElement | null>(null);
+  const confirmModalRef = useRef<HTMLDivElement>(null);
 
   const handleBack = () => {
     backTriggerRef.current = document.activeElement as HTMLElement;
@@ -258,6 +297,35 @@ function EditorPage() {
     requestAnimationFrame(() => backTriggerRef.current?.focus());
   }, []);
 
+  useEffect(() => {
+    if (!showBackConfirm) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeBackConfirm(); return; }
+      if (e.key !== 'Tab') return;
+      const modal = confirmModalRef.current;
+      if (!modal) return;
+      const focusable = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    requestAnimationFrame(() => {
+      const buttons = confirmModalRef.current?.querySelectorAll<HTMLButtonElement>('button');
+      buttons?.[buttons.length - 1]?.focus();
+    });
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showBackConfirm, closeBackConfirm]);
+
   const confirmBack = () => {
     dispatch({ type: 'CLEAR_CONTENT' });
     setShowBackConfirm(false);
@@ -266,6 +334,7 @@ function EditorPage() {
 
   return (
     <section>
+      <StepIndicator />
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center gap-3">
           <h2 className="text-lg font-semibold text-gray-900">编辑 & 预览</h2>
@@ -286,7 +355,13 @@ function EditorPage() {
       <EditWorkspace />
 
       {showBackConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div
+          ref={confirmModalRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="确认返回"
+        >
           <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -346,8 +421,6 @@ function AppRoutes() {
       <Header />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-12 pt-6">
-        {location.pathname !== '/' && <StepIndicator />}
-
         <Routes>
           <Route path="/" element={<InputPage />} />
           <Route

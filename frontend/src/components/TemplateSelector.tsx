@@ -194,7 +194,7 @@ export default function TemplateSelector() {
             onClick={() => dispatch({ type: 'SELECT_TEMPLATE', payload: t.id })}
             className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
               selected
-                ? 'border-indigo-500 bg-indigo-50 shadow-md ring-1 ring-indigo-500/20'
+                ? 'border-indigo-500 bg-indigo-50 shadow-md ring-1 ring-indigo-500/20 animate-[scale-up_200ms_ease-out]'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
             }`}
           >

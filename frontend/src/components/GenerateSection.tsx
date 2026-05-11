@@ -158,7 +158,11 @@ export default function GenerateSection() {
           ],
         },
       });
-      navigate('/editor');
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: 'README 生成成功，已跳转到编辑页面', type: 'success' },
+      });
+      navigate('/editor', { state: { fromGeneration: true } });
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         return; // 用户取消，不做任何处理
@@ -191,7 +195,7 @@ export default function GenerateSection() {
               { label: '生成 README 内容', min: 3 },
               { label: '格式化排版', min: 8 },
             ].map((step, i) => {
-              const thresholds = [0, 3, 8];
+              const thresholds = [1, 4, 8];
               const prevDone = elapsed >= thresholds[i];
               const curActive = elapsed >= thresholds[i] && (i === 2 || elapsed < thresholds[i + 1]);
 

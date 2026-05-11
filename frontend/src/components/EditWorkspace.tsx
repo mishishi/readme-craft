@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
 import { generateReadme } from '../services/api';
@@ -9,7 +10,10 @@ import ActionBar from './ActionBar';
 
 export default function EditWorkspace() {
   const { state, dispatch } = useApp();
-  const [tab, setTab] = useState<'editor' | 'preview'>('editor');
+  const location = useLocation();
+  const [tab, setTab] = useState<'editor' | 'preview'>(
+    (location.state as Record<string, unknown>)?.fromGeneration ? 'preview' : 'editor'
+  );
   const [regenerating, setRegenerating] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -141,6 +145,13 @@ export default function EditWorkspace() {
             </>
           )}
         </div>
+        <span className="hidden items-center gap-2 sm:flex">
+          <span className="text-gray-200">|</span>
+          <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px] leading-none text-gray-400">⌘Z</kbd>
+          <span className="text-xs text-gray-400">撤销</span>
+          <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px] leading-none text-gray-400">⌘⇧Z</kbd>
+          <span className="text-xs text-gray-400">重做</span>
+        </span>
         {templateName && (
           <span className="flex items-center gap-1.5">
             <span className="text-gray-200">模板</span>

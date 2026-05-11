@@ -9,11 +9,16 @@ import EditorPanel from './EditorPanel';
 import PreviewPanel from './PreviewPanel';
 import ActionBar from './ActionBar';
 
-export default function EditWorkspace() {
+interface EditWorkspaceProps {
+  fromGeneration?: boolean;
+  onBack?: () => void;
+}
+
+export default function EditWorkspace({ fromGeneration: propFrom, onBack }: EditWorkspaceProps = {}) {
   const { state, dispatch } = useApp();
   const location = useLocation();
   const [tab, setTab] = useState<'editor' | 'preview'>(
-    (location.state as Record<string, unknown>)?.fromGeneration ? 'preview' : 'editor'
+    (propFrom ?? (location.state as Record<string, unknown>)?.fromGeneration) ? 'preview' : 'editor'
   );
   const [regenerating, setRegenerating] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -23,7 +28,7 @@ export default function EditWorkspace() {
   const totalChars = state.sections.reduce((sum, s) => sum + s.content.length, 0) + state.title.length;
   const readTimeMinutes = Math.max(1, Math.round(totalChars / 500));
 
-  const fromGeneration = Boolean((location.state as Record<string, unknown>)?.fromGeneration);
+  const fromGeneration = Boolean(propFrom ?? (location.state as Record<string, unknown>)?.fromGeneration);
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
   const feedbackShownRef = useRef(false);
 

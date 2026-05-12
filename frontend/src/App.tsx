@@ -10,23 +10,33 @@ import GenerateSection from './components/GenerateSection';
 import ShowcaseSection from './components/ShowcaseSection';
 import ConfirmBackModal from './components/ConfirmBackModal';
 import EditWorkspace from './components/EditWorkspace';
+import GitHubTokenWarning from './components/GitHubTokenWarning';
+import StepIndicator from './components/StepIndicator';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import AdminLayout from './components/AdminLayout';
 import { trackEvent } from './services/tracking';
 
-function Toast({ id, message, type, onClose }: { id: string; message: string; type: 'success' | 'error'; onClose: (id: string) => void }) {
+function Toast({ id, message, type, onClose }: { id: string; message: string; type: 'success' | 'error' | 'info' | 'warning'; onClose: (id: string) => void }) {
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (paused) return;
-    const timer = setTimeout(() => onClose(id), 6000);
+    const timer = setTimeout(() => onClose(id), type === 'info' ? 3000 : 6000);
     return () => clearTimeout(timer);
-  }, [id, onClose, paused]);
+  }, [id, onClose, paused, type]);
 
-  const bg = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+  const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-500' : 'bg-indigo-500';
   const icon = type === 'success' ? (
     <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  ) : type === 'info' ? (
+    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+    </svg>
+  ) : type === 'warning' ? (
+    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
     </svg>
   ) : (
     <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -84,16 +94,19 @@ function HomePage() {
   return (
     <section>
       <HeroSection />
-      {!state.repoUrl && <ShowcaseSection />}
+      <ShowcaseSection />
       <div className="mx-auto mt-6 max-w-2xl">
         <RepoInput disabled={false} />
-        <RepoInfoCard />
+          <GitHubTokenWarning />
+          <RepoInfoCard />
       </div>
 
       {/* 选模板：仅当仓库信息加载后展示，减少首屏认知负荷 */}
       <div className={state.repoInfo ? 'animate-fade-in-up' : 'hidden'}>
         <TemplateSelector />
       </div>
+
+      <StepIndicator />
 
       <GenerateSection />
     </section>

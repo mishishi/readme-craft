@@ -22,11 +22,24 @@ function getFromCache(key: string): string | null {
 
 const FETCH_TIMEOUT = 15_000;
 
+class RateLimitError extends Error {
+  retryAfter: number;
+  constructor(retryAfter: number) {
+    super(`GitHub API rate limited. Retry after ${retryAfter}s`);
+    this.retryAfter = retryAfter;
+  }
+}
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
   try {
     const res = await fetch(url, { ...options, signal: controller.signal });
+    if (res.status === 429) {
+      const retryAfter = parseInt(res.headers.get('Retry-After') || '60', 10);
+      console.warn(`[project-scanner] ⚠️ GitHub API 429 on ${url.slice(0, 80)} — will retry after ${retryAfter}s`);
+      throw new RateLimitError(retryAfter);
+    }
     return res;
   } finally {
     clearTimeout(timer);
@@ -77,7 +90,7 @@ async function fetchGitHubTree(
     const items: GitHubTreeItem[] = rootData.tree || [];
 
     // Step 2: Identify interesting subdirectories from root and fetch their trees recursively
-    const interestingDirs = new Set(['src', 'lib', 'app', 'cmd', 'packages', 'api', 'client', 'server']);
+    const interestingDirs = new Set(['src', 'lib', 'app', 'cmd', 'packages', 'api', 'client', 'server', 'pkg', 'crates', 'core', 'include']);
     const subTreeShas: { path: string; sha: string }[] = [];
     for (const raw of rootData.tree || []) {
       if (raw.type === 'tree' && raw.sha && interestingDirs.has(raw.path)) {
@@ -227,7 +240,7 @@ export async function scanProject(
   }
 
   // 4. Detect source directories (sync, from tree)
-  const sourceDirs = ['src/', 'lib/', 'app/', 'cmd/', 'packages/'];
+  const sourceDirs = ['src/', 'lib/', 'app/', 'cmd/', 'packages/', 'pkg/', 'crates/', 'core/', 'include/'];
   const foundSrc = sourceDirs.filter((d) => allPaths.has(d) || [...allPaths].some((p) => p.startsWith(d)));
   if (foundSrc.length > 0) {
     contextParts.push(`## 源码目录\n${foundSrc.map((d) => `- ${d}`).join('\n')}`);

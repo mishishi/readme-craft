@@ -1,102 +1,4 @@
-import { useCallback, useState } from 'react';
-import { useApp } from '../context/AppContext';
-import { fetchRepoInfo } from '../services/github';
-import { preScanProject, generateReadme } from '../services/api';
-import { parseSections } from '../services/markdown';
-import { trackEvent } from '../services/tracking';
-
-const DEMO_REPO_URL = 'https://github.com/chalk/chalk';
-const DEMO_TEMPLATE = 'badges';
-
 export default function HeroSection() {
-  const { dispatch } = useApp();
-  const [demoLoading, setDemoLoading] = useState(false);
-
-  const handleDemo = useCallback(async () => {
-    if (demoLoading) return;
-    setDemoLoading(true);
-    trackEvent('demo_started');
-
-    try {
-      dispatch({ type: 'SET_REPO_URL', payload: DEMO_REPO_URL });
-      dispatch({ type: 'FETCH_REPO_START' });
-
-      const info = await fetchRepoInfo(DEMO_REPO_URL);
-      dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
-      dispatch({ type: 'SELECT_TEMPLATE', payload: DEMO_TEMPLATE });
-
-      trackEvent('demo_repo_fetched', { fullName: info.fullName });
-
-      // Pre-scan in background
-      const [owner, repo] = info.fullName.split('/');
-      if (owner && repo) {
-        preScanProject(owner, repo, info.defaultBranch);
-      }
-
-      // Generate
-      dispatch({ type: 'GENERATE_START' });
-      trackEvent('generation_started', { templateId: DEMO_TEMPLATE, repo: info.fullName });
-
-      // 滚动到生成区域，让用户看到生成动画进度
-      requestAnimationFrame(() => {
-        document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-
-      const startTime = Date.now();
-      const markdown = await generateReadme({
-        repoUrl: DEMO_REPO_URL,
-        templateId: DEMO_TEMPLATE,
-        repoInfo: info,
-      });
-
-      // Demo 最小展示 2s，让生成动画有机会播放（缓存命中时瞬间返回）
-      const elapsed = Date.now() - startTime;
-      if (elapsed < 2000) {
-        await new Promise((r) => setTimeout(r, 2000 - elapsed));
-      }
-
-      const { preamble, sections } = parseSections(markdown);
-      dispatch({
-        type: 'GENERATE_SUCCESS',
-        payload: {
-          title: info.name,
-          preamble,
-          sections: sections.length > 0 ? sections : [
-            { id: crypto.randomUUID(), heading: '简介', content: markdown },
-          ],
-        },
-      });
-
-      trackEvent('generation_succeeded', {
-        templateId: DEMO_TEMPLATE,
-        repo: info.fullName,
-        sectionCount: sections.length,
-      });
-
-      // 展示结果卡片而非直接跳转编辑器 — 统一所有入口的用户体验
-      dispatch({ type: 'SHOW_RESULT_CARD' });
-      dispatch({
-        type: 'SHOW_TOAST',
-        payload: { message: 'Demo README 已生成，可进入编辑或预览章节', type: 'success' },
-      });
-
-      // 滚动到结果卡片
-      setTimeout(() => {
-        document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      const msg = err instanceof Error ? err.message : 'Demo 生成失败';
-      dispatch({
-        type: 'SHOW_TOAST',
-        payload: { message: msg, type: 'error' },
-      });
-      trackEvent('demo_failed', { error: msg });
-    } finally {
-      setDemoLoading(false);
-    }
-  }, [dispatch, demoLoading]);
-
   return (
     <div className="relative overflow-hidden">
       {/* 装饰发光圆点 */}
@@ -115,7 +17,7 @@ export default function HeroSection() {
         {/* 标题 */}
         <h1 className="mt-6 animate-fade-in-up-delay-1 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
           <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-            README 智造工坊
+            ReadMeCraft
           </span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl animate-fade-in-up-delay-1 text-base leading-relaxed text-gray-500 sm:text-lg">
@@ -124,29 +26,15 @@ export default function HeroSection() {
           告别枯燥编写，拥抱高效创作。
         </p>
 
-        {/* Demo 体验按钮 */}
-        <div className="mt-8 animate-fade-in-up-delay-1">
-          <button
-            onClick={handleDemo}
-            disabled={demoLoading}
-            className="group inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-300 active:scale-[0.98] disabled:opacity-70"
-          >
-            {demoLoading ? (
-              <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-            )}
-            {demoLoading ? '正在生成 Demo...' : '🚀 一键体验 Demo'}
-          </button>
-          <p className="mt-2 text-xs text-gray-400">
-            无需输入，点击即可用 chalk 仓库体验完整流程
-          </p>
-        </div>
+        {/* 品牌主张 - 情感化 hook */}
+        <p className="mt-6 animate-fade-in-up-delay-2 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-5 py-1.5 text-sm font-medium text-indigo-700 ring-1 ring-indigo-100/50">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            让每个开源项目，都拥有一份令人心动的 README
+          </span>
+        </p>
 
         {/* 特性卡片 */}
         <div className="mt-10 grid animate-fade-in-up-delay-2 grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
@@ -205,6 +93,7 @@ export default function HeroSection() {
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

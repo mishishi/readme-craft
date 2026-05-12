@@ -8,11 +8,11 @@ import Modal from './Modal';
 import RepoPreview from './RepoPreview';
 import { trackEvent } from '../services/tracking';
 
-const STATUS_MESSAGES = [
-  '正在分析仓库结构...',
-  '正在提取项目信息...',
-  '正在生成 README 内容...',
-  '正在优化章节排版...',
+const PHASES = [
+  { threshold: 0,  message: '正在连接 AI 服务...',     progress: 15, color: 'from-indigo-500 to-blue-500' },
+  { threshold: 2,  message: '正在分析仓库结构...',      progress: 35, color: 'from-blue-500 to-cyan-500' },
+  { threshold: 5,  message: '正在生成 README 内容...',   progress: 60, color: 'from-cyan-500 to-teal-500' },
+  { threshold: 10, message: '正在优化章节排版...',      progress: 80, color: 'from-teal-500 to-emerald-500' },
 ];
 
 export default function GenerateSection() {
@@ -20,13 +20,11 @@ export default function GenerateSection() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [statusIdx, setStatusIdx] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
   const [showResult, setShowResult] = useState(false);
   const [copying, setCopying] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -38,18 +36,12 @@ export default function GenerateSection() {
   useEffect(() => {
     if (state.generating) {
       setElapsed(0);
-      setStatusIdx(0);
       timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
-      statusTimerRef.current = setInterval(() => {
-        setStatusIdx((i) => (i + 1) % STATUS_MESSAGES.length);
-      }, 3000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (statusTimerRef.current) clearInterval(statusTimerRef.current);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (statusTimerRef.current) clearInterval(statusTimerRef.current);
     };
   }, [state.generating]);
 
@@ -122,6 +114,16 @@ export default function GenerateSection() {
     setError(null);
     document.getElementById('template-selector')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [dispatch]);
+
+  // Phase-based progress: derive from elapsed time, never cycles back
+  const phase = (() => {
+    let p = PHASES[0];
+    for (const ph of PHASES) {
+      if (elapsed >= ph.threshold) p = ph;
+    }
+    return p;
+  })();
+  const phaseIndex = PHASES.indexOf(phase);
 
   const template = state.selectedTemplate ? templates.find((t) => t.id === state.selectedTemplate) : null;
   const sectionCount = state.sections.length;
@@ -202,22 +204,25 @@ export default function GenerateSection() {
             </div>
           </div>
 
-          {/* 生成状态 — 每 3 秒循环切换文案 */}
+          {/* 阶段化生成状态 — 单向推进，永不回退 */}
           <p className="mb-4 text-sm font-medium text-indigo-700 transition-opacity">
-            <span key={statusIdx} className="animate-fade-in-up inline-block">{STATUS_MESSAGES[statusIdx]}</span>
+            <span key={phase.message} className="animate-fade-in-up inline-block">
+              {phase.message}
+              {phaseIndex >= 2 && <span className="animate-pulse">..</span>}
+            </span>
           </p>
 
-          {/* 不确定进度条 */}
+          {/* 确定进度条 — 阶段色渐变 */}
           <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
-            <div className="h-full w-full origin-left animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" />
+            <div
+              className={`h-full rounded-full bg-gradient-to-r ${phase.color} transition-all duration-700 ease-out`}
+              style={{ width: `${phase.progress}%` }}
+            />
           </div>
 
           <p className="text-xs text-gray-400">
             已等待 {elapsed} 秒
             {elapsed >= 15 && <span className="text-amber-500"> · 生成时间较长，请耐心等待...</span>}
-          </p>
-          <p className="mt-1 text-xs text-gray-400">
-            首次生成稍慢，同一仓库再次生成会更快
           </p>
           <button
             onClick={handleCancel}
@@ -278,52 +283,61 @@ export default function GenerateSection() {
               </div>
             </div>
 
-            {/* 操作按钮 */}
-            <div className="flex flex-wrap items-center gap-2 px-5 py-4">
+            {/* 操作按钮 — 层次化引导 */}
+            <div className="space-y-2 px-5 py-4">
+              {/* 一级：主要操作 — 进入编辑 */}
               <button
                 onClick={handleEnterEditor}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-lg"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                 </svg>
-                进入编辑
+                进入编辑 & 预览
               </button>
-              <button
-                onClick={handleCopyFromResult}
-                disabled={copying}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
-              >
-                {copying ? (
-                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+
+              {/* 二级：快速导出 */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyFromResult}
+                  disabled={copying}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                >
+                  {copying ? (
+                    <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                    </svg>
+                  )}
+                  复制
+                </button>
+                <button
+                  onClick={handleDownloadFromResult}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                ) : (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                  下载 .md
+                </button>
+              </div>
+
+              {/* 三级：换模板 */}
+              <div className="text-center">
+                <button
+                  onClick={handleSwitchTemplate}
+                  className="inline-flex items-center gap-1 text-xs text-gray-400 transition-colors hover:text-amber-500"
+                >
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                   </svg>
-                )}
-                复制
-              </button>
-              <button
-                onClick={handleDownloadFromResult}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                下载 .md
-              </button>
-              <button
-                onClick={handleSwitchTemplate}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                </svg>
-                换模板重试
-              </button>
+                  不满意？换模板重新生成
+                </button>
+              </div>
             </div>
           </div>
         </div>

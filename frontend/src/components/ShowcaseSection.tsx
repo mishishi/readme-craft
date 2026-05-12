@@ -1,10 +1,9 @@
 import { useRef, useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
-import { preScanProject, generateReadme } from '../services/api';
-import { parseSections } from '../services/markdown';
 import { templates } from '../templates';
 import { TemplatePreview } from './TemplateSelector';
+import { CompactSkeleton } from './TemplateSkeleton';
 import { trackEvent } from '../services/tracking';
 
 interface ShowcaseItem {
@@ -23,13 +22,13 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
 ];
 
 export default function ShowcaseSection() {
-  const { state, dispatch } = useApp();
+  const { dispatch } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [loadingRepo, setLoadingRepo] = useState<string | null>(null);
-  const [generatingRepo, setGeneratingRepo] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleSelect = useCallback(async (item: ShowcaseItem) => {
-    if (loadingRepo || generatingRepo) return;
+    if (loadingRepo) return;
     setLoadingRepo(item.repo);
 
     const url = `https://github.com/${item.repo}`;
@@ -40,55 +39,14 @@ export default function ShowcaseSection() {
       dispatch({ type: 'FETCH_REPO_START' });
       const info = await fetchRepoInfo(url);
       dispatch({ type: 'FETCH_REPO_SUCCESS', payload: info });
-      trackEvent('demo_repo_fetched', { fullName: info.fullName });
+      trackEvent('showcase_repo_fetched', { fullName: info.fullName });
 
-      // Pre-scan in background
-      const [owner, repo] = info.fullName.split('/');
-      if (owner && repo) {
-        preScanProject(owner, repo, info.defaultBranch);
-      }
-
-      // Auto-trigger generation after fetch
-      setLoadingRepo(null);
-      setGeneratingRepo(item.repo);
-      dispatch({ type: 'GENERATE_START' });
-      trackEvent('generation_started', { templateId: item.template, repo: info.fullName });
-
-      const markdown = await generateReadme({
-        repoUrl: url,
-        templateId: item.template,
-        repoInfo: info,
-      });
-
-      const { preamble, sections } = parseSections(markdown);
-      dispatch({
-        type: 'GENERATE_SUCCESS',
-        payload: {
-          title: info.name,
-          preamble,
-          sections: sections.length > 0 ? sections : [
-            { id: crypto.randomUUID(), heading: '简介', content: markdown },
-          ],
-        },
-      });
-
-      // Show result card & scroll
-      dispatch({ type: 'SHOW_RESULT_CARD' });
-      dispatch({
-        type: 'SHOW_TOAST',
-        payload: { message: `已为 ${item.name} 生成 README`, type: 'success' },
-      });
-      trackEvent('generation_succeeded', {
-        templateId: item.template,
-        repo: info.fullName,
-        sectionCount: sections.length,
-      });
-
+      // 折叠展示区并滚动到生成区域
+      setCollapsed(true);
       setTimeout(() => {
         document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     } catch (err) {
-      // Don't treat abort as error
       if (err instanceof DOMException && err.name === 'AbortError') return;
       const msg = err instanceof Error ? err.message : '获取仓库信息失败';
       dispatch({ type: 'FETCH_REPO_ERROR', payload: msg });
@@ -99,19 +57,36 @@ export default function ShowcaseSection() {
       trackEvent('showcase_failed', { error: msg });
     } finally {
       setLoadingRepo(null);
-      setGeneratingRepo(null);
     }
-  }, [dispatch, loadingRepo, generatingRepo]);
+  }, [dispatch, loadingRepo]);
+
+  if (collapsed) {
+    return (
+      <section className="mx-auto mt-10 max-w-5xl px-4">
+        <div className="text-center">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 transition-colors hover:text-gray-600"
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l-6.75-6.75M12 19.5l6.75-6.75" />
+            </svg>
+            查看其他示例
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto mt-10 max-w-5xl px-4">
       {/* 标题 */}
       <div className="mb-3 text-center">
         <h2 className="text-base font-semibold text-gray-900">
-          看看热门项目用不同模板的效果
+          快速体验
         </h2>
         <p className="mt-1 text-xs text-gray-400">
-          点击卡片快速填入仓库 + 选择模板，一键生成
+          选择一个热门项目，一键填入信息并生成 README
         </p>
       </div>
 
@@ -124,7 +99,7 @@ export default function ShowcaseSection() {
         {SHOWCASE_ITEMS.map((item) => {
           const template = templates.find((t) => t.id === item.template);
           if (!template) return null;
-          const isLoading = loadingRepo === item.repo || generatingRepo === item.repo;
+          const isLoading = loadingRepo === item.repo;
 
           return (
             <button
@@ -141,7 +116,7 @@ export default function ShowcaseSection() {
                     {template.name}
                   </span>
                 </div>
-                <TemplatePreview id={item.template} />
+                {isLoading ? <CompactSkeleton /> : <TemplatePreview id={item.template} />}
               </div>
 
               {/* 信息区 */}
@@ -150,7 +125,7 @@ export default function ShowcaseSection() {
                   <span className="text-sm font-semibold text-gray-900">{item.name}</span>
                   {isLoading ? (
                     <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-medium text-indigo-600">
-                      {loadingRepo === item.repo ? '获取中…' : '生成中…'}
+                      获取中…
                     </span>
                   ) : (
                     <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500">
@@ -170,7 +145,7 @@ export default function ShowcaseSection() {
                     </span>
                   ) : (
                     <>
-                      选择此组合
+                      填入此组合
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
                       </svg>

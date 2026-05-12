@@ -60,7 +60,11 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function PreviewPanel() {
+interface PreviewPanelProps {
+  feedbackCard?: React.ReactNode;
+}
+
+export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
   const { state, dispatch } = useApp();
   const previewRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -224,6 +228,9 @@ export default function PreviewPanel() {
           <span>暂无内容，请先生成 README</span>
         </div>
       )}
+
+      {/* 反馈卡片 — 浮在预览内容底部 */}
+      {feedbackCard}
 
       {/* 回到顶部 */}
       {showBackToTop && (

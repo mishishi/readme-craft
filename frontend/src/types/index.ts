@@ -39,8 +39,8 @@ export interface AppState {
   title: string;
   preamble: string;
   sections: Section[];
-  toast: { id?: string; message: string; type: 'success' | 'error' } | null;
-  toasts: { id: string; message: string; type: 'success' | 'error' }[];
+  toast: { id?: string; message: string; type: 'success' | 'error' | 'info' | 'warning' } | null;
+  toasts: { id: string; message: string; type: 'success' | 'error' | 'info' | 'warning' }[];
   activeSectionId: string | null;
   collapsedSections: string[];
   showResultCard: boolean;
@@ -72,7 +72,7 @@ export type AppAction =
   | { type: 'SET_TITLE'; payload: string }
   | { type: 'UPDATE_SECTION'; payload: { id: string; content: string } }
   | { type: 'UPDATE_SECTION_HEADING'; payload: { id: string; heading: string } }
-  | { type: 'SHOW_TOAST'; payload: { message: string; type: 'success' | 'error'; id?: string } }
+  | { type: 'SHOW_TOAST'; payload: { message: string; type: 'success' | 'error' | 'info' | 'warning'; id?: string } }
   | { type: 'DISMISS_TOAST'; payload?: string }
   | { type: 'RESET' }
   | { type: 'CLEAR_CONTENT' }

@@ -27,6 +27,13 @@ function getGenerateCacheKey(owner: string, repo: string, templateId: string): s
   return `gen:${owner}/${repo}:${templateId}`;
 }
 
+/** 根据 variationSeed 计算差异化 temperature */
+function computeTemperature(seed?: number): number {
+  if (seed === undefined) return 0.8;
+  // 1.0–1.2 范围，种子不同产生不同偏移
+  return 1.0 + (seed % 3) * 0.1;
+}
+
 // 每个模板的验证规则
 const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
   minimal: minimalRules,
@@ -40,6 +47,7 @@ interface GenerateBody {
   repoUrl: string;
   templateId: string;
   feedback?: string;
+  variationSeed?: number;
   repoInfo: {
     name: string;
     description: string;
@@ -54,14 +62,16 @@ interface GenerateBody {
 
 export async function generateRoutes(app: FastifyInstance) {
   app.post<{ Body: GenerateBody }>('/generate-readme', async (request, reply) => {
-    const { repoUrl, templateId, repoInfo, feedback } = request.body;
+    const { repoUrl, templateId, repoInfo, feedback, variationSeed } = request.body;
 
     if (!repoUrl || !templateId || !repoInfo?.name) {
       return reply.status(400).send({ error: '缺少必要参数' });
     }
 
-    // Check cache (skip when user provides feedback — must generate fresh)
-    if (!feedback && repoInfo.owner && repoInfo.name) {
+    const skipCache = Boolean(variationSeed);
+
+    // Check cache (skip when user provides feedback or variationSeed — must generate fresh)
+    if (!skipCache && !feedback && repoInfo.owner && repoInfo.name) {
       const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
       const cached = generateCache.get(cacheKey);
       if (cached && Date.now() < cached.expiresAt) {
@@ -91,7 +101,7 @@ export async function generateRoutes(app: FastifyInstance) {
       const userPrompt = buildUserPrompt(repoInfo, projectContext, feedback);
 
       // --- 第一次生成 ---
-      let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt));
+      let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt, computeTemperature(variationSeed)));
       let refined = false;
 
       // --- 输出质量验证 + 修正 ---
@@ -115,7 +125,7 @@ export async function generateRoutes(app: FastifyInstance) {
 
             try {
               const refinedMarkdown = cleanMarkdown(
-                await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt)
+                await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt, computeTemperature(variationSeed))
               );
               const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
               refined = true;
@@ -159,7 +169,17 @@ export async function generateRoutes(app: FastifyInstance) {
     } catch (err) {
       const message = err instanceof Error ? err.message : '生成失败';
       console.error('Generate error:', err);
-      return reply.status(500).send({ error: message });
+
+      // 结构化错误响应
+      const isRateLimit = message.includes('429') || message.includes('rate limit');
+      const isTimeout = message.includes('timeout') || message.includes('timed out');
+      const isAuth = message.includes('401') || message.includes('API key') || message.includes('未配置');
+
+      return reply.status(500).send({
+        error: message,
+        code: isRateLimit ? 'RATE_LIMIT' : isAuth ? 'AUTH_ERROR' : 'GENERATION_FAILED',
+        retryAfter: isRateLimit ? 30 : isTimeout ? 10 : undefined,
+      });
     }
   });
 }

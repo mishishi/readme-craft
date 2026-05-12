@@ -14,7 +14,8 @@ interface MiniMaxResponse {
 
 export async function generateReadme(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  temperature?: number
 ): Promise<string> {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
@@ -35,7 +36,7 @@ export async function generateReadme(
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.8,
+      temperature: temperature ?? 0.8,
       max_tokens: 8192,
     }),
   });

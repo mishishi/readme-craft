@@ -17,7 +17,10 @@ await app.register(repoRoutes, { prefix: '/api' });
 await app.register(preScanRoutes, { prefix: '/api' });
 await app.register(analyticsRoutes, { prefix: '/api' });
 
-app.get('/api/health', async () => ({ status: 'ok' }));
+app.get('/api/health', async () => ({
+  status: 'ok',
+  githubTokenConfigured: Boolean(process.env.GITHUB_TOKEN),
+}));
 
 // 优雅关闭：让 tsx watch 能快速退出
 const shutdown = async (signal: string) => {
@@ -31,6 +34,11 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 try {
   await app.listen({ port, host: '0.0.0.0' });
   console.log(`🚀 Server running at http://localhost:${port}`);
+  if (!process.env.GITHUB_TOKEN) {
+    console.warn('\n⚠️  警告: 未配置 GITHUB_TOKEN');
+    console.warn('    GitHub API 未认证时限制为 60 次/小时，请在 server/.env 中配置 GITHUB_TOKEN 以提升至 5000 次/小时。');
+    console.warn('    创建地址: https://github.com/settings/tokens（无需任何权限）\n');
+  }
 } catch (err) {
   app.log.error(err);
   process.exit(1);

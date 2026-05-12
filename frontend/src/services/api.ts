@@ -6,6 +6,7 @@ interface GenerateRequest {
   templateId: string;
   repoInfo: RepoInfo;
   feedback?: string;
+  variationSeed?: number;
 }
 
 interface GenerateResponse {
@@ -42,7 +43,19 @@ export async function generateReadme(req: GenerateRequest, signal?: AbortSignal)
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `生成失败 (${res.status})`);
+    const status = res.status;
+    let message = body.error || '';
+    if (!message) {
+      if (status === 429) message = '请求太频繁，请稍后再试';
+      else if (status === 502 || status === 503) message = 'AI 服务暂时不可用，请稍后重试';
+      else if (status >= 500) message = '服务器繁忙，请稍后重试';
+      else message = `生成失败 (${status})`;
+    }
+    const error = new Error(message);
+    (error as any).code = body.code;
+    (error as any).retryAfter = body.retryAfter;
+    (error as any).status = status;
+    throw error;
   }
 
   const data: GenerateResponse = await res.json();

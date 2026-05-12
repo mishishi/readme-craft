@@ -71,6 +71,11 @@ export async function fetchRepoInfo(
       : 'GitHub API 请求过于频繁，请在 server/.env 中配置 GITHUB_TOKEN 以提升限额';
     throw new Error(msg);
   }
+  if (res.status === 429) {
+    const retryAfter = res.headers.get('Retry-After') || '60';
+    console.warn(`[github] ⚠️ GitHub API 429 on repo lookup — retry after ${retryAfter}s`);
+    throw new Error(`GitHub API 请求过于频繁，请在 ${retryAfter} 秒后重试，或配置 GITHUB_TOKEN 提升限额`);
+  }
   if (!res.ok) throw new Error('获取仓库信息失败，请稍后重试');
 
   const d: GitHubRepo = await res.json();

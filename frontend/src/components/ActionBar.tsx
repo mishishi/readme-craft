@@ -1,10 +1,12 @@
 import { useCallback, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { assembleMarkdown } from '../services/markdown';
 import { trackEvent } from '../services/tracking';
 
 export default function ActionBar() {
   const { state, dispatch } = useApp();
+  const navigate = useNavigate();
   const [copying, setCopying] = useState(false);
 
   const getMarkdown = useCallback(
@@ -65,6 +67,20 @@ export default function ActionBar() {
 
   return (
     <div className="flex items-center gap-2">
+      {/* 新建 — 清空当前内容并回到首页 */}
+      <button
+        onClick={() => {
+          dispatch({ type: 'CLEAR_CONTENT' });
+          navigate('/');
+        }}
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        title="新建 README"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l-6.75-6.75M12 19.5l6.75-6.75" />
+        </svg>
+      </button>
+      <span className="h-5 w-px bg-gray-200" />
       {/* Undo */}
       <button
         onClick={() => dispatch({ type: 'UNDO' })}

@@ -1,6 +1,7 @@
 import { useApp } from '../context/AppContext';
 import { templates } from '../templates';
 import RepoPreview from './RepoPreview';
+import { CompactSkeleton } from './TemplateSkeleton';
 import { trackEvent } from '../services/tracking';
 
 /** 每个模板的 Markdown 风格预览 — 展示实际排版结构和视觉风格 */
@@ -226,7 +227,9 @@ export default function TemplateSelector() {
                 </span>
               </div>
               <div className="mt-2">
-                {state.repoInfo ? (
+                {state.repoLoading ? (
+                  <CompactSkeleton />
+                ) : state.repoInfo ? (
                   <RepoPreview repoInfo={state.repoInfo} templateId={t.id} />
                 ) : (
                   <TemplatePreview id={t.id} accent={t.preview.accent} />
@@ -251,6 +254,9 @@ export default function TemplateSelector() {
                   推荐：{rec}
                 </span>
               )}
+              <span className="mt-1.5 block text-[9px] text-gray-300">
+                AI 生成 · 仅供参考
+              </span>
             </div>
 
             {/* 选中指示器 */}

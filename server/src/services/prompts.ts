@@ -4,7 +4,7 @@ import {
   enterpriseSkeleton,
   cardsSkeleton,
   showcaseSkeleton,
-} from './template-skeletons';
+} from './template-skeletons/index.js';
 
 interface RepoInfo {
   name: string;

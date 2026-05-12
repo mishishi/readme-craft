@@ -89,6 +89,9 @@ function EditorPage() {
           调整标题和章节内容，右侧实时预览效果
         </p>
       </div>
+
+      <StepIndicator />
+
       <EditWorkspace />
 
       <ConfirmBackModal
@@ -141,6 +144,7 @@ function AppRoutes() {
   }, [state.toasts, location.pathname, dispatch]);
 
   const isAdmin = location.pathname.startsWith('/admin');
+  const isEditor = location.pathname === '/editor';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -167,7 +171,7 @@ function AppRoutes() {
         </AsyncBoundary>
       </main>
 
-      {!isAdmin && (
+      {!isAdmin && !isEditor && (
         <footer className="border-t border-gray-200 bg-white py-4 text-center text-sm text-gray-400">
           <div className="flex items-center justify-center gap-3">
             <span>ReadMeCraft — 中文 README 生成器</span>

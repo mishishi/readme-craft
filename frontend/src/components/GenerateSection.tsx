@@ -313,10 +313,10 @@ export default function GenerateSection() {
                   />
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-gray-400">
-                  <span>章节 {readmeScore.checks.sections}/30</span>
-                  <span>内容 {readmeScore.checks.substance}/30</span>
-                  <span>细节 {readmeScore.checks.details}/25</span>
-                  <span>语言 {readmeScore.checks.language}/15</span>
+                  <span title="章节数量与结构完整性">章节 {readmeScore.checks.sections}/30</span>
+                  <span title="内容深度与信息量">内容 {readmeScore.checks.substance}/30</span>
+                  <span title="细节丰富度（示例、数据、配置）">细节 {readmeScore.checks.details}/25</span>
+                  <span title="语言表达与文档规范">语言 {readmeScore.checks.language}/15</span>
                 </div>
               </div>
             )}

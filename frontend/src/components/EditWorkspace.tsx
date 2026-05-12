@@ -50,17 +50,11 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
     const t1 = setTimeout(() => {
       dispatch({
         type: 'SHOW_TOAST',
-        payload: { message: '按 ⌘S 快速下载 README', type: 'info' },
+        payload: { message: '按 ⌘S 快速下载 · 按 ⌘? 查看快捷键', type: 'info' },
       });
     }, 1000);
-    const t2 = setTimeout(() => {
-      dispatch({
-        type: 'SHOW_TOAST',
-        payload: { message: '按 ⌘? 查看全部快捷键', type: 'info' },
-      });
-    }, 3000);
-    const t3 = setTimeout(() => setShowPulse(false), 3500);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const t2 = setTimeout(() => setShowPulse(false), 3500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [fromGeneration, dispatch]);
 
   const handleRegenerate = useCallback(async (feedback?: string) => {
@@ -262,9 +256,9 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
 
       {/* 反馈 FAB — 悬浮在编辑区右下角，仅生成后显示 */}
       {fromGeneration && (
-        <div className="fixed bottom-24 right-8 z-30 flex flex-col items-end gap-2">
+        <div className="fixed bottom-24 right-8 z-50 flex flex-col items-end gap-2">
           {showFeedbackFloating && (
-            <div className="w-80 rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5">
+            <div className="w-[calc(100vw-2rem)] sm:w-80 rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5">
               <div className="relative">
                 <button
                   onClick={() => setShowFeedbackFloating(false)}
@@ -333,7 +327,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
           <span className="text-xs text-gray-400">重做</span>
           <button
             onClick={() => setShowShortcuts(true)}
-            className="ml-1 flex h-5 w-5 items-center justify-center rounded border border-gray-200 bg-white text-[10px] font-medium text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="ml-1 flex h-7 w-7 items-center justify-center rounded border border-gray-200 bg-white text-xs font-medium text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
             title="查看全部快捷键"
             aria-label="快捷键帮助"
           >

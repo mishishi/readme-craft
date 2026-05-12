@@ -34,6 +34,14 @@
   .card {
     @apply rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md;
   }
+
+  .card-hover {
+    @apply transition-shadow duration-200 hover:shadow-md;
+  }
+
+  .dialog {
+    @apply rounded-xl bg-white p-6 shadow-2xl;
+  }
 }
 
 /* 网格背景 */

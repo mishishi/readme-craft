@@ -45,7 +45,7 @@ export default function Header() {
     sKeys.forEach(k => sessionStorage.removeItem(k));
     dispatch({ type: 'RESET' });
     setShowClearConfirm(false);
-    window.location.reload();
+    navigate('/');
   };
 
   const openHistory = useCallback(() => {
@@ -135,7 +135,7 @@ export default function Header() {
               </div>
             </div>
             <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              将清除所有本地存储的编辑状态和访问记录，页面将重新加载。
+              将清除所有本地存储的编辑状态和访问记录。
             </p>
             <div className="flex justify-end gap-3">
               <button

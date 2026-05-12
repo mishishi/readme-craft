@@ -82,7 +82,7 @@ export default function EditorPanel({ diffSectionIds }: EditorPanelProps) {
             type="text"
             value={state.title}
             onChange={(e) => dispatch({ type: 'SET_TITLE', payload: e.target.value })}
-            className="input-field text-lg font-bold"
+            className={`input-field text-lg font-bold ${!state.title && sectionCount === 0 ? 'border-indigo-200 bg-indigo-50/30 ring-1 ring-indigo-200/50' : ''}`}
             placeholder="README 标题..."
           />
         </div>
@@ -103,7 +103,8 @@ export default function EditorPanel({ diffSectionIds }: EditorPanelProps) {
               <svg className="mx-auto mb-3 h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
-              <p className="mb-3 text-sm text-gray-400">暂无章节内容</p>
+              <p className="mb-1 text-sm text-gray-400">暂无章节内容</p>
+              <p className="mb-4 text-xs text-gray-300">从 AI 生成的内容开始编辑，或手动添加章节</p>
               <button
                 onClick={() => dispatch({ type: 'ADD_SECTION' })}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"

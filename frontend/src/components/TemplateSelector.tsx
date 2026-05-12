@@ -210,7 +210,9 @@ export default function TemplateSelector() {
             key={t.id}
             onClick={() => {
               dispatch({ type: 'SELECT_TEMPLATE', payload: t.id });
-              dispatch({ type: 'SHOW_TOAST', payload: { message: `已选择「${t.name}」模板`, type: 'success' } });
+              if (!state.selectedTemplate) {
+                dispatch({ type: 'SHOW_TOAST', payload: { message: `已选择「${t.name}」模板`, type: 'success' } });
+              }
               trackEvent('template_selected', { templateId: t.id, templateName: t.name });
             }}
             className={`group relative overflow-hidden rounded-xl border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${

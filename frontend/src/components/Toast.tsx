@@ -57,7 +57,7 @@ export default function ToastContainer() {
   if (state.toasts.length === 0) return null;
 
   return (
-    <div className="fixed right-4 top-[calc(4rem+env(safe-area-inset-top,0px))] z-50 flex w-72 flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-50 flex w-72 flex-col gap-2">
       {state.toasts.map((t) => (
         <div key={t.id} className="animate-slide-in-right">
           <Toast id={t.id} message={t.message} type={t.type} onClose={onClose} />

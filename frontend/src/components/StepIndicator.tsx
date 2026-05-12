@@ -16,8 +16,6 @@ export default function StepIndicator() {
   if (state.repoInfo && state.selectedTemplate) currentStep = 2; // template selected
   if (state.sections.length > 0 || state.title) currentStep = 3; // generated
 
-  if (currentStep === 0) return null; // don't show until first step is reached
-
   return (
     <div className="mx-auto mt-8 max-w-2xl">
       <div className="flex items-center justify-between">
@@ -30,11 +28,11 @@ export default function StepIndicator() {
               {/* Step circle + label */}
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold transition-all ${
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold transition-all duration-300 ${
                     isCompleted
                       ? 'bg-indigo-500 text-white'
                       : isCurrent
-                      ? 'border-2 border-indigo-500 bg-indigo-50 text-indigo-600'
+                      ? 'border-2 border-indigo-500 bg-indigo-50 text-indigo-600 animate-scale-up'
                       : 'border-2 border-gray-200 bg-white text-gray-300'
                   }`}
                 >

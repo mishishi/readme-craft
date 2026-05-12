@@ -207,7 +207,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
 
   return (
     <div
-      className={`rounded-lg border transition-all hover:shadow-sm ${isChanged ? 'bg-yellow-50 ring-2 ring-yellow-300' : 'bg-white'} ${isCollapsed ? 'border-dashed border-gray-300' : 'border-gray-200'}`}
+      className={`rounded-xl border transition-all hover:shadow-sm ${isChanged ? 'bg-yellow-50 ring-2 ring-yellow-300' : 'bg-white'} ${isCollapsed ? 'border-dashed border-gray-300' : 'border-gray-200'}`}
       onClick={handleSectionFocus}
     >
       {/* 章节标题栏 */}

@@ -5,6 +5,7 @@ import { templates } from '../templates';
 import { generateReadme } from '../services/api';
 import { parseSections } from '../services/markdown';
 import { trackEvent } from '../services/tracking';
+import { uuid } from '../utils/uuid';
 import EditorPanel from './EditorPanel';
 import PreviewPanel from './PreviewPanel';
 import ActionBar from './ActionBar';
@@ -81,7 +82,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
           title: state.repoInfo.name,
           preamble,
           sections: sections.length > 0 ? sections : [
-            { id: crypto.randomUUID(), heading: '简介', content: markdown },
+            { id: uuid(), heading: '简介', content: markdown },
           ],
         },
       });

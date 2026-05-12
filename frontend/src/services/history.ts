@@ -1,4 +1,5 @@
 import type { HistoryEntry } from '../types';
+import { uuid } from '../utils/uuid';
 
 export type { HistoryEntry };
 
@@ -41,7 +42,7 @@ export function saveEntry(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): void {
 
   const fullEntry: HistoryEntry = {
     ...entry,
-    id: crypto.randomUUID(),
+    id: uuid(),
     createdAt: now,
   };
 

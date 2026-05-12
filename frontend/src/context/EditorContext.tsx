@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
 import type { Section, AppAction } from '../types';
+import { uuid } from '../utils/uuid';
 
 export interface EditorState {
   selectedTemplate: string | null;
@@ -87,7 +88,7 @@ function editorReducer(state: EditorState, action: AppAction): EditorState {
     case 'ADD_SECTION': {
       const addHistory = pushHistory(state);
       const newSection = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         heading: action.payload?.heading || '新章节',
         content: '',
       };

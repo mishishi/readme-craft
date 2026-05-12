@@ -1,4 +1,5 @@
 import type { Section } from '../types';
+import { uuid } from '../utils/uuid';
 
 /**
  * 将 markdown 解析为 title + preamble（H2 前的内容）+ 章节列表
@@ -27,7 +28,7 @@ export function parseSections(markdown: string): { title: string; preamble: stri
         currentContent = [];
       } else if (currentHeading) {
         sections.push({
-          id: crypto.randomUUID(),
+          id: uuid(),
           heading: currentHeading,
           content: currentContent.join('\n').trim(),
         });
@@ -45,7 +46,7 @@ export function parseSections(markdown: string): { title: string; preamble: stri
     preambleLines = [...currentContent];
   } else if (currentHeading) {
     sections.push({
-      id: crypto.randomUUID(),
+      id: uuid(),
       heading: currentHeading,
       content: currentContent.join('\n').trim(),
     });

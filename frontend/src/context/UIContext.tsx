@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
 import type { AppAction } from '../types';
+import { uuid } from '../utils/uuid';
 
 interface Toast {
   id: string;
@@ -20,7 +21,7 @@ const initialUIState: UIState = {
 function uiReducer(state: UIState, action: AppAction): UIState {
   switch (action.type) {
     case 'SHOW_TOAST': {
-      const id = action.payload.id || crypto.randomUUID();
+      const id = action.payload.id || uuid();
       return { ...state, toast: { ...action.payload, id }, toasts: [...state.toasts, { ...action.payload, id }] };
     }
     case 'DISMISS_TOAST': {

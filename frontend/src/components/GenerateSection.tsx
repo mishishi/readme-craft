@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { generateReadme } from '../services/api';
 import { assembleMarkdown, parseSections } from '../services/markdown';
+import { uuid } from '../utils/uuid';
 import { templates } from '../templates';
 import Modal from './Modal';
 import RepoPreview from './RepoPreview';
@@ -176,7 +177,7 @@ export default function GenerateSection() {
           title: state.repoInfo.name,
           preamble,
           sections: sections.length > 0 ? sections : [
-            { id: crypto.randomUUID(), heading: '简介', content: markdown },
+            { id: uuid(), heading: '简介', content: markdown },
           ],
         },
       });

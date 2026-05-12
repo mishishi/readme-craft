@@ -1,3 +1,5 @@
+import { uuid } from '../utils/uuid';
+
 /**
  * Minimal analytics tracking — fire-and-forget events to POST /api/events.
  * Never blocks the UI, never throws. Best-effort only.
@@ -10,12 +12,12 @@ function getSessionId(): string {
   try {
     let id = sessionStorage.getItem(SESSION_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = uuid();
       sessionStorage.setItem(SESSION_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return uuid();
   }
 }
 
@@ -23,12 +25,12 @@ function getVisitorId(): string {
   try {
     let id = localStorage.getItem(VISITOR_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = uuid();
       localStorage.setItem(VISITOR_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return uuid();
   }
 }
 

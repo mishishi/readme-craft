@@ -47,6 +47,7 @@ export async function generateReadme(
   }
 
   const data: MiniMaxResponse = await response.json();
+  console.error('[MiniMax]', JSON.stringify({ status: response.status, data }).slice(0, 2000));
   const content = data.choices?.[0]?.message?.content;
 
   if (!content) {

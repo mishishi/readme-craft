@@ -1,4 +1,4 @@
-import { useApp } from '../context/AppContext';
+import { useRepo } from '../context/RepoContext';
 
 function Skeleton() {
   return (
@@ -19,7 +19,7 @@ function Skeleton() {
 }
 
 export default function RepoInfoCard() {
-  const { state } = useApp();
+  const { state } = useRepo();
   if (state.repoLoading) return <Skeleton />;
   if (!state.repoInfo) return null;
 

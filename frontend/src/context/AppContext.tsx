@@ -1,196 +1,21 @@
-import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useMemo, useCallback, type ReactNode } from 'react';
 import type { AppState, AppAction } from '../types';
+import { RepoProvider, useRepo, type RepoState } from './RepoContext';
+import { EditorProvider, useEditor, type EditorState } from './EditorContext';
+import { UIProvider, useUI, type UIState } from './UIContext';
 import { saveEntry } from '../services/history';
 import { templates } from '../templates';
 
-const initialState: AppState = {
-  repoUrl: '',
-  repoInfo: null,
-  repoLoading: false,
-  repoError: null,
-  selectedTemplate: null,
-  generating: false,
-  generateError: null,
-  title: '',
-  preamble: '',
-  sections: [],
-  toast: null,
-  toasts: [],
-  activeSectionId: null,
-  collapsedSections: [],
-  showResultCard: false,
-  history: [],
-  historyIndex: -1,
-};
-
 const SESSION_KEY = 'readme-craft-state';
 
-function loadInitialState(): AppState {
+function loadInitialState() {
   try {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved) as AppState;
-      return { ...parsed, collapsedSections: parsed.collapsedSections ?? [], history: [], historyIndex: -1, repoLoading: false, repoError: null, generating: false, generateError: null, toast: null, toasts: [] };
+      return JSON.parse(saved) as Record<string, unknown>;
     }
   } catch {}
-  return initialState;
-}
-
-const MAX_HISTORY = 50;
-
-function pushHistory(state: AppState): { history: AppState['history']; historyIndex: number } {
-  const snapshot = { title: state.title, preamble: state.preamble, sections: state.sections };
-  const history = state.history.slice(0, state.historyIndex + 1);
-  history.push(snapshot);
-  while (history.length > MAX_HISTORY) history.shift();
-  return { history, historyIndex: history.length - 1 };
-}
-
-function appReducer(state: AppState, action: AppAction): AppState {
-  switch (action.type) {
-    case 'SET_REPO_URL':
-      return { ...state, repoUrl: action.payload, repoError: null };
-    case 'FETCH_REPO_START':
-      return { ...state, repoLoading: true, repoError: null, repoInfo: null };
-    case 'FETCH_REPO_SUCCESS':
-      return { ...state, repoLoading: false, repoInfo: action.payload };
-    case 'FETCH_REPO_ERROR':
-      return { ...state, repoLoading: false, repoError: action.payload };
-    case 'SELECT_TEMPLATE':
-      return { ...state, selectedTemplate: action.payload };
-    case 'GENERATE_START':
-      return { ...state, generating: true, generateError: null, showResultCard: false };
-    case 'GENERATE_SUCCESS': {
-      const genHistory = pushHistory(state);
-      return {
-        ...state,
-        ...genHistory,
-        generating: false,
-        title: action.payload.title,
-        preamble: action.payload.preamble,
-        sections: action.payload.sections,
-      };
-    }
-    case 'GENERATE_ERROR':
-      return { ...state, generating: false, generateError: action.payload };
-    case 'SET_TITLE': {
-      const titleHistory = pushHistory(state);
-      return { ...state, ...titleHistory, title: action.payload };
-    }
-    case 'UPDATE_SECTION': {
-      const updHistory = pushHistory(state);
-      return {
-        ...state,
-        ...updHistory,
-        sections: state.sections.map((s) =>
-          s.id === action.payload.id ? { ...s, content: action.payload.content } : s
-        ),
-      };
-    }
-    case 'UPDATE_SECTION_HEADING': {
-      const headingHistory = pushHistory(state);
-      return {
-        ...state,
-        ...headingHistory,
-        sections: state.sections.map((s) =>
-          s.id === action.payload.id ? { ...s, heading: action.payload.heading } : s
-        ),
-      };
-    }
-    case 'SHOW_TOAST': {
-      const id = action.payload.id || crypto.randomUUID();
-      return { ...state, toast: { ...action.payload, id }, toasts: [...state.toasts, { ...action.payload, id }] };
-    }
-    case 'DISMISS_TOAST': {
-      if (action.payload) {
-        return { ...state, toasts: state.toasts.filter((t) => t.id !== action.payload), toast: state.toast?.id === action.payload ? null : state.toast };
-      }
-      return { ...state, toast: null, toasts: state.toasts.slice(1) };
-    }
-    case 'CLEAR_CONTENT':
-      return { ...state, sections: [], title: '', preamble: '', generating: false, generateError: null, showResultCard: false };
-    case 'ADD_SECTION': {
-      const addHistory = pushHistory(state);
-      const newSection = {
-        id: crypto.randomUUID(),
-        heading: action.payload?.heading || '新章节',
-        content: '',
-      };
-      return { ...state, ...addHistory, sections: [...state.sections, newSection] };
-    }
-    case 'DELETE_SECTION': {
-      const delHistory = pushHistory(state);
-      return { ...state, ...delHistory, sections: state.sections.filter((s) => s.id !== action.payload.id) };
-    }
-    case 'MOVE_SECTION': {
-      const moveHistory = pushHistory(state);
-      const idx = state.sections.findIndex((s) => s.id === action.payload.id);
-      if (idx === -1) return state;
-      const sections = [...state.sections];
-      const targetIdx = action.payload.direction === 'up' ? idx - 1 : idx + 1;
-      if (targetIdx < 0 || targetIdx >= sections.length) return state;
-      [sections[idx], sections[targetIdx]] = [sections[targetIdx], sections[idx]];
-      return { ...state, ...moveHistory, sections };
-    }
-    case 'SET_ACTIVE_SECTION':
-      return { ...state, activeSectionId: action.payload };
-    case 'MOVE_SECTION_TO': {
-      const moveToHistory = pushHistory(state);
-      const fromIdx = state.sections.findIndex((s) => s.id === action.payload.id);
-      if (fromIdx === -1) return state;
-      const sections = [...state.sections];
-      const [removed] = sections.splice(fromIdx, 1);
-      sections.splice(action.payload.toIndex, 0, removed);
-      return { ...state, ...moveToHistory, sections };
-    }
-    case 'SET_COLLAPSED': {
-      const collapsedSections = action.payload.collapsed
-        ? [...state.collapsedSections, action.payload.id]
-        : state.collapsedSections.filter((id) => id !== action.payload.id);
-      return { ...state, collapsedSections };
-    }
-    case 'RESTORE_FROM_HISTORY':
-      return {
-        ...state,
-        title: action.payload.title,
-        preamble: action.payload.preamble,
-        sections: action.payload.sections,
-        selectedTemplate: action.payload.templateId,
-        history: [],
-        historyIndex: -1,
-      };
-    case 'UNDO': {
-      if (state.historyIndex < 0) return state;
-      const prevSnapshot = state.history[state.historyIndex];
-      return {
-        ...state,
-        title: prevSnapshot.title,
-        preamble: prevSnapshot.preamble,
-        sections: prevSnapshot.sections,
-        historyIndex: state.historyIndex - 1,
-      };
-    }
-    case 'REDO': {
-      if (state.historyIndex >= state.history.length - 1) return state;
-      const nextSnapshot = state.history[state.historyIndex + 1];
-      return {
-        ...state,
-        title: nextSnapshot.title,
-        preamble: nextSnapshot.preamble,
-        sections: nextSnapshot.sections,
-        historyIndex: state.historyIndex + 1,
-      };
-    }
-    case 'SHOW_RESULT_CARD':
-      return { ...state, showResultCard: true };
-    case 'HIDE_RESULT_CARD':
-      return { ...state, showResultCard: false };
-    case 'RESET':
-      try { sessionStorage.removeItem(SESSION_KEY); } catch {}
-      return initialState;
-    default:
-      return state;
-  }
+  return {};
 }
 
 interface AppContextValue {
@@ -200,37 +25,95 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, undefined, loadInitialState);
+function CombinedProvider({ children }: { children: ReactNode }) {
+  const repo = useRepo();
+  const editor = useEditor();
+  const ui = useUI();
+
+  const state = useMemo<AppState>(
+    () => ({
+      ...repo.state,
+      ...editor.state,
+      ...ui.state,
+    }),
+    [repo.state, editor.state, ui.state]
+  );
+
+  const dispatch = useCallback(
+    (action: AppAction) => {
+      repo.dispatch(action);
+      editor.dispatch(action);
+      ui.dispatch(action);
+    },
+    [repo.dispatch, editor.dispatch, ui.dispatch]
+  );
 
   // Auto-save to persistent history when generation completes
-  const prevGeneratingRef = useRef(state.generating);
+  const prevGeneratingRef = useRef(editor.state.generating);
   useEffect(() => {
-    if (prevGeneratingRef.current && !state.generating && state.sections.length > 0 && state.repoInfo) {
+    if (prevGeneratingRef.current && !editor.state.generating && editor.state.sections.length > 0 && repo.state.repoInfo) {
       saveEntry({
-        repoFullName: state.repoInfo.fullName,
-        repoUrl: state.repoUrl,
-        templateId: state.selectedTemplate || '',
-        templateName: templates.find((t) => t.id === state.selectedTemplate)?.name || '',
-        title: state.title,
-        preamble: state.preamble,
-        sections: state.sections,
+        repoFullName: repo.state.repoInfo.fullName,
+        repoUrl: repo.state.repoUrl,
+        templateId: editor.state.selectedTemplate || '',
+        templateName: templates.find((t) => t.id === editor.state.selectedTemplate)?.name || '',
+        title: editor.state.title,
+        preamble: editor.state.preamble,
+        sections: editor.state.sections,
       });
     }
-    prevGeneratingRef.current = state.generating;
-  }, [state.generating, state.sections, state.title, state.preamble, state.repoInfo, state.repoUrl, state.selectedTemplate]);
+    prevGeneratingRef.current = editor.state.generating;
+  }, [editor.state.generating, editor.state.sections, editor.state.title, editor.state.preamble, editor.state.selectedTemplate, repo.state.repoInfo, repo.state.repoUrl]);
 
+  // Auto-save to sessionStorage for page-refresh recovery
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       try {
-        const { toast, toasts, repoLoading, repoError, generating, generateError, activeSectionId, showResultCard, history, historyIndex, ...persistable } = state;
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(persistable));
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          repoUrl: repo.state.repoUrl,
+          repoInfo: repo.state.repoInfo,
+          selectedTemplate: editor.state.selectedTemplate,
+          title: editor.state.title,
+          preamble: editor.state.preamble,
+          sections: editor.state.sections,
+          collapsedSections: editor.state.collapsedSections,
+          strictMode: editor.state.strictMode,
+        }));
       } catch {}
     });
     return () => cancelAnimationFrame(id);
-  }, [state]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repo.state.repoUrl, repo.state.repoInfo, editor.state.selectedTemplate, editor.state.title, editor.state.preamble, editor.state.sections, editor.state.collapsedSections, editor.state.strictMode]);
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const saved = loadInitialState();
+
+  const repoInitial: Partial<RepoState> = {};
+  if (saved.repoUrl) repoInitial.repoUrl = saved.repoUrl as string;
+  if (saved.repoInfo) repoInitial.repoInfo = saved.repoInfo as RepoState['repoInfo'];
+
+  const editorInitial: Partial<EditorState> = {};
+  if (saved.selectedTemplate) editorInitial.selectedTemplate = saved.selectedTemplate as string;
+  if (saved.title) editorInitial.title = saved.title as string;
+  if (saved.preamble) editorInitial.preamble = saved.preamble as string;
+  if (saved.sections) editorInitial.sections = saved.sections as EditorState['sections'];
+  if (saved.collapsedSections) editorInitial.collapsedSections = saved.collapsedSections as string[];
+  if (saved.strictMode) editorInitial.strictMode = saved.strictMode as boolean;
+
+  return (
+    <RepoProvider initialState={repoInitial}>
+      <EditorProvider initialState={editorInitial}>
+        <UIProvider>
+          <CombinedProvider>
+            {children}
+          </CombinedProvider>
+        </UIProvider>
+      </EditorProvider>
+    </RepoProvider>
+  );
 }
 
 export function useApp() {

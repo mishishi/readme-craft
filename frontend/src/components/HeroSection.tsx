@@ -17,24 +17,14 @@ export default function HeroSection() {
         {/* 标题 */}
         <h1 className="mt-6 animate-fade-in-up-delay-1 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
           <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-            ReadMeCraft
+            AI 生成中文 README
           </span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl animate-fade-in-up-delay-1 text-base leading-relaxed text-gray-500 sm:text-lg">
-          输入仓库地址，选择心仪模板，AI 即刻生成优雅专业的中文 README。
-          <br />
-          告别枯燥编写，拥抱高效创作。
+          输入仓库地址 · 选择模板 · 一分钟出稿
         </p>
 
-        {/* 品牌主张 - 情感化 hook */}
-        <p className="mt-6 animate-fade-in-up-delay-2 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-5 py-1.5 text-sm font-medium text-indigo-700 ring-1 ring-indigo-100/50">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            让每个开源项目，都拥有一份令人心动的 README
-          </span>
-        </p>
+
 
         {/* 特性卡片 */}
         <div className="mt-10 grid animate-fade-in-up-delay-2 grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
@@ -55,8 +45,8 @@ export default function HeroSection() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
                 </svg>
               ),
-              title: '5 款精美模板',
-              desc: '多种风格，随心选择',
+              title: '仓库智能分析',
+              desc: '自动分析仓库结构与依赖',
               color: 'text-purple-600 bg-purple-50 ring-purple-100',
             },
             {

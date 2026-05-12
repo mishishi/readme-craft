@@ -7,12 +7,15 @@ import { templates } from '../templates';
 import Modal from './Modal';
 import RepoPreview from './RepoPreview';
 import { trackEvent } from '../services/tracking';
+import { scoreReadme, getScoreColor, getScoreLabel } from '../services/readme-scorer';
+import type { ReadmeScore } from '../services/readme-scorer';
 
 const PHASES = [
-  { threshold: 0,  message: '正在连接 AI 服务...',     progress: 15, color: 'from-indigo-500 to-blue-500' },
-  { threshold: 2,  message: '正在分析仓库结构...',      progress: 35, color: 'from-blue-500 to-cyan-500' },
-  { threshold: 5,  message: '正在生成 README 内容...',   progress: 60, color: 'from-cyan-500 to-teal-500' },
-  { threshold: 10, message: '正在优化章节排版...',      progress: 80, color: 'from-teal-500 to-emerald-500' },
+  { threshold: 0,  message: '正在连接 AI 服务...',        progress: 10, color: 'from-indigo-500 to-blue-500' },
+  { threshold: 2,  message: '正在分析仓库结构...',         progress: 30, color: 'from-blue-500 to-cyan-500' },
+  { threshold: 5,  message: 'AI 正在生成 README 内容...',   progress: 55, color: 'from-cyan-500 to-teal-500' },
+  { threshold: 8,  message: '正在优化章节排版...',         progress: 75, color: 'from-teal-500 to-emerald-500' },
+  { threshold: 10, message: '正在进行质量检查...',         progress: 90, color: 'from-emerald-500 to-green-500' },
 ];
 
 export default function GenerateSection() {
@@ -24,6 +27,7 @@ export default function GenerateSection() {
   const [showPulse, setShowPulse] = useState(true);
   const [showResult, setShowResult] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [readmeScore, setReadmeScore] = useState<ReadmeScore | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,6 +59,13 @@ export default function GenerateSection() {
       }, 100);
     }
   }, [state.showResultCard, state.sections.length]);
+
+  // Calculate quality score when result is shown
+  useEffect(() => {
+    if (showResult && state.sections.length > 0) {
+      setReadmeScore(scoreReadme(state.title, state.sections));
+    }
+  }, [showResult, state.title, state.sections]);
 
   const getMarkdown = useCallback(
     () => assembleMarkdown(state.title, state.preamble, state.sections),
@@ -154,6 +165,7 @@ export default function GenerateSection() {
         repoUrl: state.repoUrl,
         templateId: state.selectedTemplate,
         repoInfo: state.repoInfo,
+        strictMode: state.strictMode,
       }, signal);
 
       const { preamble, sections } = parseSections(markdown);
@@ -282,6 +294,32 @@ export default function GenerateSection() {
                 ))}
               </div>
             </div>
+
+            {/* 质量评分仪表盘 */}
+            {readmeScore && (
+              <div className="border-b border-gray-100 px-5 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">质量评分</span>
+                  <span className={`text-xs font-semibold ${getScoreColor(readmeScore.total)}`}>
+                    {getScoreLabel(readmeScore.total)}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      readmeScore.total >= 70 ? 'bg-emerald-500' : readmeScore.total >= 45 ? 'bg-amber-500' : 'bg-red-400'
+                    }`}
+                    style={{ width: `${readmeScore.total}%` }}
+                  />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] text-gray-400">
+                  <span>章节 {readmeScore.checks.sections}/30</span>
+                  <span>内容 {readmeScore.checks.substance}/30</span>
+                  <span>细节 {readmeScore.checks.details}/25</span>
+                  <span>语言 {readmeScore.checks.language}/15</span>
+                </div>
+              </div>
+            )}
 
             {/* 操作按钮 — 层次化引导 */}
             <div className="space-y-2 px-5 py-4">

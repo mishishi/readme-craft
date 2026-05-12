@@ -1,4 +1,12 @@
+import { useCallback } from 'react';
 import { trackEvent } from '../services/tracking';
+
+const PRESET_FEEDBACKS = [
+  { label: '内容太简略', prompt: '内容过于简略，请扩充每个章节的细节，增加具体的技术描述和使用示例' },
+  { label: '技术栈不准确', prompt: '技术栈描述不准确，请根据仓库代码中的实际依赖修正框架和工具列表' },
+  { label: '安装步骤有误', prompt: '安装步骤可能需要补充环境要求、前置依赖和配置说明' },
+  { label: '需要更多示例', prompt: '请增加更多代码示例，覆盖常见使用场景和高级用法' },
+];
 
 interface FeedbackCardProps {
   /** 是否刚完成生成（控制整个组件的显隐） */
@@ -94,6 +102,18 @@ export default function FeedbackCard({
               上次反馈：{lastFeedbackText}
             </div>
           )}
+          {/* 预设反馈按钮 */}
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {PRESET_FEEDBACKS.map((preset) => (
+              <button
+                key={preset.label}
+                onClick={() => onInputChange(preset.prompt)}
+                className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-[11px] font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-50 active:scale-95"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
           <textarea
             value={inputText}
             onChange={(e) => onInputChange(e.target.value)}

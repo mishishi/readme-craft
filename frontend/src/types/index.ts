@@ -46,6 +46,7 @@ export interface AppState {
   showResultCard: boolean;
   history: { title: string; preamble: string; sections: Section[] }[];
   historyIndex: number;
+  strictMode: boolean;
 }
 
 export interface HistoryEntry {
@@ -86,4 +87,5 @@ export type AppAction =
   | { type: 'REDO' }
   | { type: 'SHOW_RESULT_CARD' }
   | { type: 'HIDE_RESULT_CARD' }
+  | { type: 'SET_STRICT_MODE'; payload: boolean }
   | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[]; templateId: string } };

@@ -110,6 +110,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, showResultCard: true };
     case 'HIDE_RESULT_CARD':
       return { ...state, showResultCard: false };
+    case 'SET_STRICT_MODE':
+      return { ...state, strictMode: action.payload };
     case 'RESET':
       return {
         repoUrl: '',
@@ -129,6 +131,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         showResultCard: false,
         history: [],
         historyIndex: -1,
+        strictMode: false,
       };
     default:
       return state;
@@ -159,6 +162,7 @@ const initialState: AppState = {
   showResultCard: false,
   history: [],
   historyIndex: -1,
+  strictMode: false,
 };
 
 describe('appReducer', () => {

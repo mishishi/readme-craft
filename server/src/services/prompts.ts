@@ -132,11 +132,20 @@ const SKELETON_RULES = `
 - ❌ "更多信息请参考官方文档" → 没有链接就是无效信息
 - ❌ "该项目正在快速迭代中" → ×除非能从源码分析中体现（如频繁提交），否则不写`;
 
-export function buildSystemPrompt(templateId: string): string {
+export function buildSystemPrompt(templateId: string, strictMode?: boolean): string {
   const skeleton = TEMPLATE_SKELETONS[templateId] || TEMPLATE_SKELETONS.minimal;
   const styleRules = TEMPLATE_STYLE_RULES[templateId] || '';
 
-  return `你是一个专业的 README 生成器。请根据用户的 GitHub 项目信息，参照下方「README 骨架」的结构生成完整 README。
+  const strictModeRules = strictMode ? `
+## 严谨模式规则（已开启）
+
+1. **禁止占位符**：任何地方不得出现「待补充」「详见正文」「暂无」等占位内容
+2. **信息溯源**：所有引用、数据、依赖名称必须从提供的项目信息中提取，不得编造
+3. **无空洞描述**：所有章节必须有实质性内容，每个段落至少包含一个具体事实
+4. **结构严格**：不得添加或删除骨架中的任何章节，不得改变表格行数、引用块数量
+5. **内容完整**：要求 5 项核心特性每个至少包含 1 句具体说明，安装指南必须包含实际命令` : '';
+
+  return `你是一个专业的 README 生成器。请根据用户的 GitHub 项目信息，参照下方「README 骨架」的结构生成完整 README。${strictModeRules}
 
 ## 你的任务
 

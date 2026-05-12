@@ -40,6 +40,28 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
   const fromGeneration = Boolean(propFrom ?? (location.state as Record<string, unknown>)?.fromGeneration);
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showPulse, setShowPulse] = useState(false);
+  const [showFeedbackFloating, setShowFeedbackFloating] = useState(false);
+
+  // 首次进入引导：下载按钮脉冲 + 快捷键提示
+  useEffect(() => {
+    if (!fromGeneration) return;
+    setShowPulse(true);
+    const t1 = setTimeout(() => {
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: '按 ⌘S 快速下载 README', type: 'info' },
+      });
+    }, 1000);
+    const t2 = setTimeout(() => {
+      dispatch({
+        type: 'SHOW_TOAST',
+        payload: { message: '按 ⌘? 查看全部快捷键', type: 'info' },
+      });
+    }, 3000);
+    const t3 = setTimeout(() => setShowPulse(false), 3500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [fromGeneration, dispatch]);
 
   const handleRegenerate = useCallback(async (feedback?: string) => {
     if (!state.selectedTemplate || !state.repoInfo || regenerating) return;
@@ -55,6 +77,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
         repoInfo: state.repoInfo,
         feedback,
         variationSeed: feedback ? undefined : Date.now(),
+        strictMode: state.strictMode,
       }, abortRef.current.signal);
 
       const { preamble, sections } = parseSections(markdown);
@@ -181,7 +204,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
           </button>
         </div>
 
-        <ActionBar />
+        <ActionBar pulseDownload={showPulse} />
 
         {/* 重新生成按钮 */}
         <button
@@ -233,30 +256,60 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
           <EditorPanel diffSectionIds={diffSectionIds} />
         </div>
         <div className={tab === 'preview' ? '' : 'hidden sm:block'}>
-          <PreviewPanel
-            feedbackCard={
-              <FeedbackCard
-                active={fromGeneration}
-                dismissed={feedbackDismissed}
-                onDismiss={() => {
-                  trackEvent('feedback', { rating: 'positive' });
-                  setFeedbackDismissed(true);
-                  dispatch({ type: 'SHOW_TOAST', payload: { message: '感谢反馈！我们会持续改进 ✨', type: 'success' } });
-                }}
-                showInput={showFeedbackInput}
-                onShowInput={() => setShowFeedbackInput(true)}
-                onHideInput={() => { setShowFeedbackInput(false); setFeedbackText(''); }}
-                inputText={feedbackText}
-                onInputChange={setFeedbackText}
-                lastFeedbackText={lastFeedbackText}
-                onRegenerate={() => handleRegenerate()}
-                onSubmitFeedback={handleFeedbackSubmit}
-                loading={regenerating}
-              />
-            }
-          />
+          <PreviewPanel />
         </div>
       </div>
+
+      {/* 反馈 FAB — 悬浮在编辑区右下角，仅生成后显示 */}
+      {fromGeneration && (
+        <div className="fixed bottom-24 right-8 z-30 flex flex-col items-end gap-2">
+          {showFeedbackFloating && (
+            <div className="w-80 rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5">
+              <div className="relative">
+                <button
+                  onClick={() => setShowFeedbackFloating(false)}
+                  className="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="关闭反馈面板"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="max-h-[70vh] overflow-y-auto">
+                  <FeedbackCard
+                    active={true}
+                    dismissed={false}
+                    onDismiss={() => {
+                      trackEvent('feedback', { rating: 'positive' });
+                      setShowFeedbackFloating(false);
+                      dispatch({ type: 'SHOW_TOAST', payload: { message: '感谢反馈！我们会持续改进 ✨', type: 'success' } });
+                    }}
+                    showInput={showFeedbackInput}
+                    onShowInput={() => setShowFeedbackInput(true)}
+                    onHideInput={() => { setShowFeedbackInput(false); setFeedbackText(''); }}
+                    inputText={feedbackText}
+                    onInputChange={setFeedbackText}
+                    lastFeedbackText={lastFeedbackText}
+                    onRegenerate={() => handleRegenerate()}
+                    onSubmitFeedback={handleFeedbackSubmit}
+                    loading={regenerating}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setShowFeedbackFloating((v) => !v)}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+            title="反馈与重新生成"
+            aria-label="反馈与重新生成"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* 状态栏 */}
       <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 text-xs text-gray-400">

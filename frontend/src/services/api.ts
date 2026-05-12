@@ -7,6 +7,7 @@ interface GenerateRequest {
   repoInfo: RepoInfo;
   feedback?: string;
   variationSeed?: number;
+  strictMode?: boolean;
 }
 
 interface GenerateResponse {

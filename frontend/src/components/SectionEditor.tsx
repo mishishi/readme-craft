@@ -21,6 +21,9 @@ const TOOLS = [
   { label: '`', action: 'code', title: '行内代码 `code`' },
   { label: '📋', action: 'codeblock', title: '代码块 ```' },
   { label: '-', action: 'list', title: '列表 - 项目' },
+  { label: '—', action: 'divider', title: '分割线 ---' },
+  { label: '>', action: 'blockquote', title: '引用 > 内容' },
+  { label: '🖼', action: 'image', title: '插入图片 ![alt](url)' },
 ];
 
 export default function SectionEditor({ section, isFirst, isLast, total, sectionIndex, onDragStart, isChanged }: Props) {
@@ -29,6 +32,9 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingHeading, setEditingHeading] = useState(false);
   const [headingDraft, setHeadingDraft] = useState(section.heading);
+  const [showImageInput, setShowImageInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const headingInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,6 +131,15 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
         case 'list':
           after = '- ' + (selected || '项目') + after;
           break;
+        case 'divider':
+          after = '\n---\n' + after;
+          break;
+        case 'blockquote':
+          after = '> ' + (selected || '引用内容') + after;
+          break;
+        case 'image':
+          after = '![' + (selected || '图片描述') + '](url)' + after;
+          break;
       }
 
       dispatch({ type: 'UPDATE_SECTION', payload: { id: section.id, content: before + after } });
@@ -160,13 +175,35 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
       if (e.key === 'b') { e.preventDefault(); insertSyntax('bold'); }
       else if (e.key === 'i') { e.preventDefault(); insertSyntax('italic'); }
       else if (e.key === 'k') { e.preventDefault(); insertSyntax('link'); }
+      else if (e.key === 'Q' && e.shiftKey) { e.preventDefault(); insertSyntax('blockquote'); }
+      else if (e.key === 'I' && e.shiftKey) { e.preventDefault(); setShowImageInput(true); }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [insertSyntax]);
 
-  // Group indices for toolbar separators
-  const toolGroup = [0, 0, 0, 1, 1, 1, 2];
+  const toolGroup = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3];
+
+  const insertImage = useCallback(() => {
+    if (!imageUrl.trim()) return;
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = section.content.substring(start, end);
+    const alt = imageAlt.trim() || selected || '图片';
+    const markdown = `![${alt}](${imageUrl.trim()})`;
+    const before = section.content.substring(0, start);
+    const after = section.content.substring(end);
+    dispatch({ type: 'UPDATE_SECTION', payload: { id: section.id, content: before + markdown + after } });
+    setShowImageInput(false);
+    setImageUrl('');
+    setImageAlt('');
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = start + markdown.length;
+    });
+  }, [section.id, section.content, imageUrl, imageAlt, dispatch]);
 
   return (
     <div
@@ -308,7 +345,13 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   <span className="mx-0.5 h-4 w-px bg-gray-200" />
                 )}
                 <button
-                  onClick={() => insertSyntax(tool.action)}
+                  onClick={() => {
+                    if (tool.action === 'image') {
+                      setShowImageInput(true);
+                    } else {
+                      insertSyntax(tool.action);
+                    }
+                  }}
                   title={tool.title}
                   className="rounded px-2 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-white hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
@@ -318,6 +361,65 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
             ))}
             <span className="ml-auto text-[10px] text-gray-300">Markdown</span>
           </div>
+
+          {/* 图片 URL 输入 */}
+          {showImageInput && (
+            <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="图片 URL（支持 GitHub raw 链接）"
+                  className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') insertImage();
+                    if (e.key === 'Escape') { setShowImageInput(false); setImageUrl(''); setImageAlt(''); }
+                  }}
+                />
+                <input
+                  type="text"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="替代文本（可选）"
+                  className="rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-36"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') insertImage();
+                    if (e.key === 'Escape') { setShowImageInput(false); setImageUrl(''); setImageAlt(''); }
+                  }}
+                />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={insertImage}
+                    disabled={!imageUrl.trim()}
+                    className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    插入
+                  </button>
+                  <button
+                    onClick={() => { setShowImageInput(false); setImageUrl(''); setImageAlt(''); }}
+                    className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-700"
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+              {imageUrl && (
+                <div className="mt-2 flex items-center gap-3">
+                  <img
+                    src={imageUrl}
+                    alt="预览"
+                    className="h-12 w-auto rounded border border-gray-200 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <span className="text-[10px] text-gray-400">
+                    {imageUrl.startsWith('http') ? '外部图片' : '将使用相对路径'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="px-4 py-3">
             <textarea

@@ -200,6 +200,7 @@ export default function TemplateSelector() {
   const { state, dispatch } = useApp();
 
   return (
+    <>
     <div id="template-selector" className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {templates.map((t) => {
         const selected = state.selectedTemplate === t.id;
@@ -269,5 +270,33 @@ export default function TemplateSelector() {
         );
       })}
     </div>
+
+      {/* 严格模式开关 */}
+      <div className="mx-auto mt-6 flex max-w-2xl items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700">严谨模式</span>
+        </div>
+        <button
+          role="switch"
+          aria-checked={state.strictMode}
+          onClick={() => dispatch({ type: 'SET_STRICT_MODE', payload: !state.strictMode })}
+          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 ${
+            state.strictMode ? 'bg-indigo-600' : 'bg-gray-200'
+          }`}
+        >
+          <span
+            className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+              state.strictMode ? 'translate-x-4' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <span className="text-xs text-gray-400">
+          开启后 AI 将严格依据仓库信息生成，禁止编造和占位符内容
+        </span>
+      </div>
+    </>
   );
 }

@@ -28,10 +28,15 @@ jobs:
           npm install
           npm run build
 
+      - name: Add SSH host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
       - name: Deploy via rsync
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avz --delete
+          switches: -avz --delete -e "ssh -o StrictHostKeyChecking=no"
           path: ./
           remote_path: /var/www/readme-craft
           remote_host: ${{ secrets.SERVER_HOST }}

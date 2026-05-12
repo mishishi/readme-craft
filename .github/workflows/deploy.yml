@@ -36,7 +36,7 @@ jobs:
       - name: Deploy via rsync
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avz --delete -e "ssh -o StrictHostKeyChecking=no"
+          switches: -avz --delete --exclude=.env -e "ssh -o StrictHostKeyChecking=no"
           path: ./
           remote_path: /var/www/readme-craft
           remote_host: ${{ secrets.SERVER_HOST }}

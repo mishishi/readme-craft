@@ -50,7 +50,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /var/www/readme-craft
-            cp /var/www/readme-craft/server/.env /tmp/.env.bak 2>/dev/null || true
-            [ ! -f server/.env ] && cp server/.env.example server/.env
-            pm2 delete readme-craft-api 2>/dev/null; pm2 start --name readme-craft-api "node server/dist/index.js"
+            [ ! -f /var/www/readme-craft/server/.env ] && cp /var/www/readme-craft/server/.env.example /var/www/readme-craft/server/.env
+            pm2 delete readme-craft-api 2>/dev/null
+            cd /var/www/readme-craft/server && pm2 start --name readme-craft-api "node dist/index.js"

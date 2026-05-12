@@ -48,4 +48,4 @@ jobs:
             cd /var/www/readme-craft
             cp /var/www/readme-craft/server/.env /tmp/.env.bak 2>/dev/null || true
             [ ! -f server/.env ] && cp server/.env.example server/.env
-            pm2 restart readme-craft-api 2>/dev/null || pm2 start --name readme-craft-api "node server/dist/index.js"
+            pm2 delete readme-craft-api 2>/dev/null; pm2 start --name readme-craft-api "node server/dist/index.js"

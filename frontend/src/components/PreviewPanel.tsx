@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useApp } from '../context/AppContext';
@@ -53,7 +54,7 @@ function CodeBlock({ language, children }: { language: string; children: React.R
       </SyntaxHighlighter>
       <button
         onClick={handleCopy}
-        className="absolute right-2 top-2 rounded-md bg-gray-700/50 p-1.5 text-gray-400 opacity-0 transition-all hover:bg-gray-600 hover:text-gray-200 group-hover:opacity-100 max-sm:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        className="absolute right-2 top-2 rounded-md bg-muted-700/50 p-1.5 text-muted-400 opacity-0 transition-all hover:bg-muted-600 hover:text-muted-200 group-hover:opacity-100 max-sm:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
         title="复制代码"
         aria-label="复制代码"
       >
@@ -107,8 +108,8 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
 
       if (heading) {
         heading.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        heading.classList.add('!text-indigo-600');
-        setTimeout(() => heading.classList.remove('!text-indigo-600'), 1000);
+        heading.classList.add('!text-primary-600');
+        setTimeout(() => heading.classList.remove('!text-primary-600'), 1000);
       }
     }, 150);
     return () => { if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current); };
@@ -133,12 +134,13 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
   return (
     <div ref={previewRef}>
       {/* 头部 */}
-      <div ref={headerRef} className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-4 py-2">
-        <span className="text-xs font-medium text-gray-500">实时预览</span>
+      <div ref={headerRef} className="flex items-center justify-between border-b border-muted-100 bg-muted-50/50 px-4 py-2">
+        <span className="text-xs font-medium text-muted-500">实时预览</span>
         {toc.length > 1 && (
           <button
             onClick={() => setShowToc((v) => !v)}
-            className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-gray-400 transition-colors hover:bg-white hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            aria-expanded={showToc}
+            className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-muted-400 transition-colors hover:bg-white hover:text-muted-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 min-h-[44px] sm:min-h-0"
             title="目录"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -151,7 +153,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
 
       {/* 目录 */}
       {showToc && toc.length > 0 && (
-        <nav className="border-b border-gray-100 bg-gray-50/20 px-6 py-3">
+        <nav className="border-b border-muted-100 bg-muted-50/20 px-6 py-3">
           <ul className="space-y-1">
             {toc.map((item) => (
               <li key={item.id}>
@@ -160,7 +162,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
                     const el = previewRef.current?.querySelector(`#${CSS.escape(item.id)}`);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="block w-full text-left rounded text-sm text-gray-500 transition-colors hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  className="block w-full text-left rounded text-sm text-muted-500 transition-colors hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
                 >
                   {item.heading}
                 </button>
@@ -172,13 +174,13 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
 
       {/* 预览内容 */}
       {markdown ? (
-        <div className="prose prose-slate max-w-none p-6 prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-lg prose-img:inline prose-img:my-0
+        <div className="prose prose-slate max-w-none p-6 prose-headings:font-bold prose-a:text-primary-600 prose-img:rounded-button prose-img:inline prose-img:my-0
           prose-code:before:content-none prose-code:after:content-none
           prose-code:!text-inherit prose-code:!bg-transparent prose-code:!font-normal
-          prose-pre:!bg-gray-900 prose-pre:!text-gray-100 prose-pre:!border-0">
+          prose-pre:!bg-muted-900 prose-pre:!text-muted-100 prose-pre:!border-0">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
             components={{
               a: ({ href, children }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer">
@@ -189,7 +191,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
                 const match = /language-(\w+)/.exec(className || '');
                 if (!match) {
                   return (
-                    <code className="!rounded !bg-gray-100 !px-1.5 !py-0.5 !text-sm !text-gray-800">
+                    <code className="!rounded !bg-muted-100 !px-1.5 !py-0.5 !text-sm !text-muted-800">
                       {children}
                     </code>
                   );
@@ -214,7 +216,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
                     <a
                       href={`#${id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-indigo-400 opacity-0 transition-opacity group-hover:opacity-100 no-underline text-sm font-normal"
+                      className="text-primary-400 opacity-0 transition-opacity group-hover:opacity-100 no-underline text-sm font-normal"
                       aria-label={`${text} 的链接`}
                     >
                       #
@@ -228,8 +230,8 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
           </ReactMarkdown>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center p-12 text-sm text-gray-400">
-          <svg className="mb-3 h-12 w-12 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="flex flex-col items-center justify-center p-12 text-sm text-muted-400">
+          <svg className="mb-3 h-12 w-12 text-muted-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
           </svg>
           <span>暂无内容，请先生成 README</span>
@@ -243,7 +245,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-[60] flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-lg transition-all hover:bg-gray-50 hover:text-indigo-600 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="fixed bottom-24 right-6 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-muted-200 bg-white text-muted-500 shadow-lg transition-all hover:bg-muted-50 hover:text-primary-600 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
           title="回到顶部"
           aria-label="回到顶部"
         >

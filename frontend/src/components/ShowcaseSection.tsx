@@ -21,6 +21,10 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
   { name: 'dayjs',   repo: 'iamkun/dayjs',        template: 'showcase',  description: '轻量级日期处理库' },
 ];
 
+function isAbortError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === 'AbortError';
+}
+
 export default function ShowcaseSection() {
   const { dispatch } = useApp();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -47,7 +51,7 @@ export default function ShowcaseSection() {
         document.getElementById('generate-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (isAbortError(err)) return;
       const msg = err instanceof Error ? err.message : '获取仓库信息失败';
       dispatch({ type: 'FETCH_REPO_ERROR', payload: msg });
       dispatch({
@@ -60,13 +64,28 @@ export default function ShowcaseSection() {
     }
   }, [dispatch, loadingRepo]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const container = scrollRef.current;
+    if (!container) return;
+    const cards = container.querySelectorAll<HTMLButtonElement>('button');
+    if (cards.length === 0) return;
+    const currentIdx = Array.from(cards).indexOf(document.activeElement as HTMLButtonElement);
+    const nextIdx = e.key === 'ArrowRight'
+      ? Math.min(currentIdx + 1, cards.length - 1)
+      : Math.max(currentIdx - 1, 0);
+    cards[nextIdx]?.focus();
+    cards[nextIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, []);
+
   if (collapsed) {
     return (
       <section className="mx-auto mt-10 max-w-5xl px-4">
         <div className="text-center">
           <button
             onClick={() => setCollapsed(false)}
-            className="inline-flex items-center gap-1.5 text-xs text-gray-400 transition-colors hover:text-gray-600"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-400 transition-colors hover:text-muted-600"
           >
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l-6.75-6.75M12 19.5l6.75-6.75" />
@@ -82,10 +101,10 @@ export default function ShowcaseSection() {
     <section className="mx-auto mt-10 max-w-5xl px-4">
       {/* 标题 */}
       <div className="mb-3 text-center">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-muted-900">
           快速体验
         </h2>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-muted-400">
           选择一个热门项目，一键填入信息并生成 README
         </p>
       </div>
@@ -93,7 +112,10 @@ export default function ShowcaseSection() {
       {/* 横向滚动卡片 */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+        role="list"
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
         style={{ scrollbarWidth: 'none' }}
       >
         {SHOWCASE_ITEMS.map((item) => {
@@ -104,15 +126,17 @@ export default function ShowcaseSection() {
           return (
             <button
               key={`${item.repo}-${item.template}`}
+              role="listitem"
+              tabIndex={-1}
               onClick={() => handleSelect(item)}
               disabled={isLoading}
-              className="w-56 shrink-0 snap-start rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-wait disabled:opacity-70"
+              className="w-56 shrink-0 snap-start rounded-card border border-muted-200 bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-muted-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-wait disabled:opacity-70"
             >
               {/* 预览区 — 轻量梯度背景 */}
-              <div className={`rounded-t-xl bg-gradient-to-br ${template.preview.gradient} p-3`}>
+              <div className={`rounded-t-card bg-gradient-to-br ${template.preview.gradient} p-3`}>
                 <div className="mb-1.5 flex items-center gap-1.5">
-                  <span className="text-base">{template.preview.icon}</span>
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-500">
+                  <span className="flex items-center text-primary-500">{template.preview.icon}</span>
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-500">
                     {template.name}
                   </span>
                 </div>
@@ -122,19 +146,19 @@ export default function ShowcaseSection() {
               {/* 信息区 */}
               <div className="p-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">{item.name}</span>
+                  <span className="text-sm font-semibold text-muted-900">{item.name}</span>
                   {isLoading ? (
-                    <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-medium text-indigo-600">
+                    <span className="rounded bg-primary-100 px-1.5 py-0.5 text-[9px] font-medium text-primary-600">
                       获取中…
                     </span>
                   ) : (
-                    <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500">
+                    <span className="rounded bg-muted-100 px-1.5 py-0.5 text-[9px] font-medium text-muted-500">
                       {item.template}
                     </span>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-gray-400">{item.description}</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600">
+                <p className="mt-0.5 text-xs text-muted-400">{item.description}</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-primary-600">
                   {isLoading ? (
                     <span className="flex items-center gap-1">
                       <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">

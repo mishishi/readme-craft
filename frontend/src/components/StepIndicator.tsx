@@ -30,10 +30,10 @@ export default function StepIndicator() {
                 <div
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-indigo-500 text-white'
+                      ? 'bg-primary-500 text-white'
                       : isCurrent
-                      ? 'border-2 border-indigo-500 bg-indigo-50 text-indigo-600 animate-scale-up'
-                      : 'border-2 border-gray-200 bg-white text-gray-300'
+                      ? 'border-2 border-primary-500 bg-primary-50 text-primary-600 animate-scale-up'
+                      : 'border-2 border-muted-200 bg-white text-muted-300'
                   }`}
                 >
                   {isCompleted ? (
@@ -46,7 +46,7 @@ export default function StepIndicator() {
                 </div>
                 <span
                   className={`mt-1 text-[10px] font-medium whitespace-nowrap ${
-                    isCurrent ? 'text-indigo-600' : isCompleted ? 'text-gray-500' : 'text-gray-300'
+                    isCurrent ? 'text-primary-600' : isCompleted ? 'text-muted-500' : 'text-muted-300'
                   }`}
                 >
                   {step.label}
@@ -55,7 +55,7 @@ export default function StepIndicator() {
 
               {/* Connector line (not after last step) */}
               {i < STEPS.length - 1 && (
-                <div className={`mx-2 h-px flex-1 ${i < currentStep ? 'bg-indigo-400' : 'bg-gray-200'}`} />
+                <div className={`mx-2 h-px flex-1 ${i < currentStep ? 'bg-primary-400' : 'bg-muted-200'}`} />
               )}
             </div>
           );

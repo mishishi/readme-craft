@@ -25,6 +25,7 @@ function cleanMarkdown(raw: string): string {
 // 生成结果缓存（内存）
 const generateCache = new Map<string, { markdown: string; expiresAt: number }>();
 const GENERATE_CACHE_TTL = 30 * 60 * 1000; // 30 分钟
+const MAX_CACHE_SIZE = 100;
 
 function getGenerateCacheKey(owner: string, repo: string, templateId: string): string {
   return `gen:${owner}/${repo}:${templateId}`;
@@ -153,6 +154,14 @@ export async function generateRoutes(app: FastifyInstance) {
 
       // Cache final result
       if (repoInfo.owner && repoInfo.name) {
+        // Evict oldest entries when cache exceeds limit
+        if (generateCache.size >= MAX_CACHE_SIZE) {
+          const entriesToDelete = generateCache.size - MAX_CACHE_SIZE + 1;
+          const iterator = generateCache.keys();
+          for (let i = 0; i < entriesToDelete; i++) {
+            generateCache.delete(iterator.next().value);
+          }
+        }
         const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);
         generateCache.set(cacheKey, { markdown, expiresAt: Date.now() + GENERATE_CACHE_TTL });
       }
@@ -173,5 +182,13 @@ export async function generateRoutes(app: FastifyInstance) {
         retryAfter: isRateLimit ? 30 : isTimeout ? 10 : undefined,
       });
     }
+  });
+
+  // Admin: clear generate cache
+  app.post('/admin/cache-clear', async (_request, reply) => {
+    const size = generateCache.size;
+    generateCache.clear();
+    console.log(`[cache] Cleared ${size} entries`);
+    return { cleared: true, size };
   });
 }

@@ -3,13 +3,13 @@ export const MOCK_README: Record<string, string> = {
 
 > 一个简洁高效的命令行工具，帮助开发者快速处理数据
 
-## 📦 安装
+## 安装
 
 \`\`\`bash
 npm install awesome-tool
 \`\`\`
 
-## 🚀 使用
+## 使用
 
 \`\`\`bash
 # 处理 CSV 文件
@@ -19,7 +19,7 @@ awesome-tool process --input data.csv --output result.json
 awesome-tool watch --interval 5s
 \`\`\`
 
-## ⚙️ 配置
+## 配置
 
 在项目根目录创建 \`awesome-tool.config.json\`：
 
@@ -31,7 +31,7 @@ awesome-tool watch --interval 5s
 }
 \`\`\`
 
-## 📄 许可证
+## 许可证
 
 MIT © zhurenbao`,
 
@@ -46,33 +46,33 @@ MIT © zhurenbao`,
   <img src="https://img.shields.io/github/stars/zhurenbao/awesome-tool" alt="stars" />
 </p>
 
-## ✨ 特性
+## 特性
 
-- **⚡ 高性能** — 基于流式处理，内存占用极低
-- **🔌 插件系统** — 支持自定义插件扩展功能
-- **📊 多种输出** — 支持 JSON、CSV、YAML 格式
-- **🛡️ 类型安全** — 完整的 TypeScript 类型定义
+- **高性能** — 基于流式处理，内存占用极低
+- **插件系统** — 支持自定义插件扩展功能
+- **多种输出** — 支持 JSON、CSV、YAML 格式
+- **类型安全** — 完整的 TypeScript 类型定义
 
-## 📦 安装
+## 安装
 
 \`\`\`bash
 npm install awesome-tool
 \`\`\`
 
-## 🚀 快速开始
+## 快速开始
 
 \`\`\`bash
 awesome-tool init
 awesome-tool build
 \`\`\`
 
-## 🛠️ 技术栈
+## 技术栈
 
 - **运行时**: Node.js 18+
 - **语言**: TypeScript
 - **测试**: Vitest
 
-## 📄 许可证
+## 许可证
 
 MIT © zhurenbao`,
 
@@ -126,7 +126,7 @@ pnpm install
 pnpm dev
 \`\`\`
 
-## 📄 许可证
+## 许可证
 
 MIT © zhurenbao`,
 
@@ -142,18 +142,18 @@ MIT © zhurenbao`,
 
 > 下一代数据处理工具，让数据工作更高效
 
-## ✨ 亮点
+## 亮点
 
-> **🚀 极致性能**
+> **极致性能**
 > 采用流式处理架构，百万级数据秒级处理
 
-> **🎨 可视化编排**
+> **可视化编排**
 > 拖拽式数据处理流程编排，无需编写代码
 
-> **🔌 丰富的生态**
+> **丰富的生态**
 > 50+ 内置插件，覆盖常见数据处理场景
 
-## 🚀 快速上手
+## 快速上手
 
 \`\`\`bash
 npx awesome-tool create my-project
@@ -161,13 +161,13 @@ cd my-project
 awesome-tool start
 \`\`\`
 
-## 🧩 生态
+## 生态
 
 - [awesome-tool-core](https://github.com/zhurenbao/awesome-tool-core) - 核心库
 - [awesome-tool-ui](https://github.com/zhurenbao/awesome-tool-ui) - 可视化界面
 - [awesome-tool-plugins](https://github.com/zhurenbao/awesome-tool-plugins) - 插件市场
 
-## 📄 许可证
+## 许可证
 
 MIT © zhurenbao`,
 
@@ -192,14 +192,14 @@ MIT © zhurenbao`,
 ![Dashboard](https://via.placeholder.com/600x350/f0f0f0/333?text=Dashboard+Preview)
 ![Editor](https://via.placeholder.com/600x350/f0f0f0/333?text=Editor+Preview)
 
-## ✨ 特性
+## 特性
 
-- 🌈 现代化的交互界面
-- 🎯 零配置即可上手
-- 🔋 内置 50+ 数据处理插件
-- ☁️ 支持云端和本地部署
+- 现代化的交互界面
+- 零配置即可上手
+- 内置 50+ 数据处理插件
+- 支持云端和本地部署
 
-## 🛠️ 技术栈
+## 技术栈
 
 **前端**: React · TypeScript · Tailwind CSS · D3.js
 **后端**: Rust · Node.js · Fastify
@@ -215,7 +215,7 @@ curl -fsSL https://get.awesome-tool.dev | bash
 awesome-tool dev
 \`\`\`
 
-## 📄 许可证
+## 许可证
 
 MIT © zhurenbao`,
 };

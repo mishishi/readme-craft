@@ -10,7 +10,7 @@ function Toast({ id, message, type, onClose }: { id: string; message: string; ty
     return () => clearTimeout(timer);
   }, [id, onClose, paused, type]);
 
-  const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-500' : 'bg-indigo-500';
+  const bg = type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : type === 'warning' ? 'toast-warning' : 'toast-info';
   const icon = type === 'success' ? (
     <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -31,15 +31,15 @@ function Toast({ id, message, type, onClose }: { id: string; message: string; ty
 
   return (
     <div
-      className={`${bg} flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm text-white shadow-lg`}
+      className={`${bg} flex items-center gap-2.5 rounded-dialog px-4 py-2.5 text-sm text-white shadow-lg`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {icon}
-      <span>{message}</span>
+      <span className="break-words hyphens-auto">{message}</span>
       <button
         onClick={() => onClose(id)}
-        className="shrink-0 rounded p-0.5 opacity-70 transition-opacity hover:opacity-100"
+        className="flex min-h-[36px] min-w-[36px] shrink-0 items-center justify-center rounded p-1.5 opacity-70 transition-colors hover:opacity-100 hover:bg-black/10"
         aria-label="关闭提示"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -56,8 +56,10 @@ export default function ToastContainer() {
 
   if (state.toasts.length === 0) return null;
 
+  const isUrgent = state.toasts.some(t => t.type === 'error' || t.type === 'warning');
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex w-72 flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-50 flex w-72 flex-col gap-2" aria-live={isUrgent ? 'assertive' : 'polite'} role="status">
       {state.toasts.map((t) => (
         <div key={t.id} className="animate-slide-in-right">
           <Toast id={t.id} message={t.message} type={t.type} onClose={onClose} />

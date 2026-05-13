@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
 import { preScanProject } from '../services/api';
@@ -11,6 +11,11 @@ interface Props {
 export default function RepoInput({ disabled }: Props) {
   const { state, dispatch } = useApp();
   const [localUrl, setLocalUrl] = useState(state.repoUrl);
+  const preScanAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => preScanAbortRef.current?.abort();
+  }, []);
 
   const isValidUrl = /^(https?:\/\/)?(www\.)?github\.com\/[\w.-]+\/[\w.-]+/.test(localUrl.trim());
 
@@ -30,7 +35,9 @@ export default function RepoInput({ disabled }: Props) {
       // Background pre-scan for faster generation
       const parsed = info.fullName.split('/');
       if (parsed.length === 2) {
-        preScanProject(parsed[0], parsed[1], info.defaultBranch);
+        preScanAbortRef.current?.abort();
+        preScanAbortRef.current = new AbortController();
+        preScanProject(parsed[0], parsed[1], info.defaultBranch, preScanAbortRef.current.signal);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '获取仓库信息失败';
@@ -51,26 +58,28 @@ export default function RepoInput({ disabled }: Props) {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <input
-            type="text"
+            type="url"
+            autoComplete="url"
             value={localUrl}
             onChange={(e) => setLocalUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入 GitHub 仓库地址，如 https://github.com/owner/repo"
             disabled={disabled}
+            aria-label="GitHub 仓库地址"
             className={`input-field pr-10 ${state.repoError ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20' : ''}`}
           />
           {state.repoLoading && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>
           )}
           {!state.repoLoading && localUrl.trim() && !isValidUrl && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2" title="URL 格式不正确">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2" title="URL 格式不正确" aria-hidden="true">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-100 text-[10px] font-bold text-red-500">!</span>
             </div>
           )}
           {!state.repoLoading && localUrl.trim() && isValidUrl && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2" title="URL 格式正确">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2" title="URL 格式正确" aria-hidden="true">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-100 text-[10px] font-bold text-green-500">✓</span>
             </div>
           )}

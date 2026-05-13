@@ -16,8 +16,8 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-[calc(100vh-10rem)] gap-0">
       {/* Sidebar */}
-      <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50/50 p-4 lg:block">
-        <p className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+      <aside className="hidden w-56 shrink-0 border-r border-muted-200 bg-muted-50/50 p-4 lg:block">
+        <p className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-400">
           管理后台
         </p>
         <nav className="flex flex-col gap-1">
@@ -26,10 +26,10 @@ export default function AdminLayout() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                `flex items-center gap-2.5 rounded-button px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-muted-600 hover:bg-muted-100 hover:text-muted-900'
                 }`
               }
             >
@@ -41,7 +41,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Mobile tab bar */}
-      <div className="flex gap-1 border-b border-gray-200 bg-white px-4 lg:hidden">
+      <div className="flex gap-1 border-b border-muted-200 bg-white px-4 lg:hidden">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
@@ -49,8 +49,8 @@ export default function AdminLayout() {
             className={({ isActive }) =>
               `border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? 'border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary-500 text-primary-700'
+                  : 'border-transparent text-muted-500 hover:text-muted-700'
               }`
             }
           >

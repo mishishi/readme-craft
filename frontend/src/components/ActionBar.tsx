@@ -77,20 +77,22 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
           dispatch({ type: 'CLEAR_CONTENT' });
           navigate('/');
         }}
-        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="新建 README"
+        aria-label="新建 README"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l-6.75-6.75M12 19.5l6.75-6.75" />
         </svg>
       </button>
-      <span className="h-5 w-px bg-gray-200" />
+      <span className="h-5 w-px bg-muted-200" />
       {/* Undo */}
       <button
         onClick={() => dispatch({ type: 'UNDO' })}
         disabled={!canUndo}
-        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="撤销（⌘Z）"
+        aria-label="撤销（⌘Z）"
       >
         <svg className={`h-3.5 w-3.5 ${!canUndo ? 'opacity-30' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
@@ -100,18 +102,19 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
       <button
         onClick={() => dispatch({ type: 'REDO' })}
         disabled={!canRedo}
-        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="重做（⌘⇧Z / ⌘Y）"
+        aria-label="重做（⌘⇧Z / ⌘Y）"
       >
         <svg className={`h-3.5 w-3.5 ${!canRedo ? 'opacity-30' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
         </svg>
       </button>
-      <span className="h-5 w-px bg-gray-200" />
+      <span className="h-5 w-px bg-muted-200" />
       <button
         onClick={handleCopy}
         disabled={copying}
-        className="btn-secondary text-sm min-w-[4.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        className="btn-secondary text-sm min-w-[4.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="复制到剪贴板"
       >
         {copying ? (
@@ -129,15 +132,16 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
       <button
         onClick={() => {
           const projectName = state.title || state.repoInfo?.name || '我的项目';
-          const text = `我刚用 ReadMeCraft 为 ${projectName} 生成了一个 README！🚀\n\n立即体验：https://readme-craft.com`;
+          const text = `我刚用 ReadMeCraft 为 ${projectName} 生成了一个 README！\n\n立即体验：https://readme-craft.com`;
           navigator.clipboard.writeText(text);
           dispatch({
             type: 'SHOW_TOAST',
             payload: { message: '分享文本已复制到剪贴板', type: 'success' },
           });
         }}
-        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="分享 README"
+        aria-label="分享 README"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
@@ -146,7 +150,7 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
       <button
         onClick={handleDownload}
         data-shortcut="download"
-        className={`btn-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${pulseDownload ? 'animate-pulse ring-2 ring-indigo-400' : ''}`}
+        className={`btn-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0 ${pulseDownload ? 'animate-pulse ring-2 ring-primary-400' : ''}`}
         title="下载 README（Ctrl+S）"
       >
         <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

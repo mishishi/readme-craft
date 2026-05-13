@@ -9,7 +9,7 @@ interface ModalProps {
   children?: ReactNode;
   confirmText?: string;
   cancelText?: string;
-  /** Override confirm button styles (e.g. bg-amber-600 for destructive actions). Default: indigo brand. */
+  /** Override confirm button styles (e.g. bg-amber-600 for destructive actions). Default: primary brand. */
   confirmClassName?: string;
   icon?: ReactNode;
   hideIcon?: boolean;
@@ -96,7 +96,7 @@ export default function Modal({
       aria-label={title}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className={`mx-4 w-full rounded-xl bg-white p-6 shadow-2xl ${containerClassName}`}>
+      <div className={`mx-4 w-full rounded-dialog bg-white p-6 shadow-2xl ${containerClassName}`}>
         {!hideIcon && (
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
             {icon || (
@@ -106,7 +106,7 @@ export default function Modal({
             )}
           </div>
         )}
-        <h3 className="mb-2 text-base font-semibold text-gray-900">{title}</h3>
+        <h3 className="mb-2 text-base font-semibold text-muted-900">{title}</h3>
         {children}
         <div className="flex justify-end gap-3" style={{ marginTop: children ? undefined : '1.5rem' }}>
           <button onClick={onClose} className="btn-secondary text-sm">{cancelText}</button>
@@ -116,7 +116,7 @@ export default function Modal({
               disabled={confirmDisabled}
               className={
                 confirmClassName ||
-                'inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 disabled:opacity-50'
+                'btn-primary'
               }
             >
               {confirmText}

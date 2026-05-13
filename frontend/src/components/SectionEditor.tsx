@@ -17,14 +17,39 @@ const TOOLS = [
   { label: 'B', action: 'bold', title: '加粗 **文本**' },
   { label: 'I', action: 'italic', title: '斜体 *文本*' },
   { label: 'H', action: 'heading', title: '标题 ### ' },
-  { label: '🔗', action: 'link', title: '链接 [文本](url)' },
+  { label: '', action: 'link', title: '链接 [文本](url)' },
   { label: '`', action: 'code', title: '行内代码 `code`' },
-  { label: '📋', action: 'codeblock', title: '代码块 ```' },
+  { label: '', action: 'codeblock', title: '代码块 ```' },
   { label: '-', action: 'list', title: '列表 - 项目' },
   { label: '—', action: 'divider', title: '分割线 ---' },
   { label: '>', action: 'blockquote', title: '引用 > 内容' },
-  { label: '🖼', action: 'image', title: '插入图片 ![alt](url)' },
+  { label: '', action: 'image', title: '插入图片 ![alt](url)' },
 ];
+
+function ToolIcon({ action }: { action: string }) {
+  switch (action) {
+    case 'link':
+      return (
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+        </svg>
+      );
+    case 'codeblock':
+      return (
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+        </svg>
+      );
+    case 'image':
+      return (
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a.75.75 0 011.06 0l2.162 2.162m0 0l3.659-3.659a.75.75 0 011.06 0L21.75 15.75M2.25 15.75A2.25 2.25 0 014.5 13.5h15a2.25 2.25 0 012.25 2.25m-16.5 0A2.25 2.25 0 004.5 18h15a2.25 2.25 0 002.25-2.25M6 9.75h.008v.008H6V9.75z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
 
 export default function SectionEditor({ section, isFirst, isLast, total, sectionIndex, onDragStart, isChanged }: Props) {
   const { state, dispatch } = useApp();
@@ -207,12 +232,12 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
 
   return (
     <div
-      className={`rounded-xl border transition-all hover:shadow-sm ${isChanged ? 'bg-yellow-50 ring-2 ring-yellow-300' : 'bg-white'} ${isCollapsed ? 'border-dashed border-gray-300' : 'border-gray-200'}`}
+      className={`cursor-pointer rounded-card border transition-all hover:shadow-sm ${isChanged ? 'bg-yellow-50 ring-2 ring-yellow-300' : 'bg-white'} ${isCollapsed ? 'border-dashed border-muted-300' : 'border-muted-200'}`}
       onClick={handleSectionFocus}
     >
       {/* 章节标题栏 */}
       <div
-        className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50"
+        className="flex items-center justify-between border-b border-muted-100 bg-muted-50/50"
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData('text/section-id', section.id);
@@ -225,11 +250,11 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
         }}
       >
         {/* Drag handle */}
-        <div className="flex cursor-grab items-center gap-1 px-2 text-gray-400 active:cursor-grabbing" title="拖拽排序">
+        <div className="flex cursor-grab items-center gap-1 px-2 text-muted-400 active:cursor-grabbing" title="拖拽排序（也可使用上下移动按钮）" aria-label="拖拽排序（也可使用上下移动按钮）">
           <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
           </svg>
-          <span className="hidden select-none text-[10px] text-gray-300 sm:inline">
+          <span className="hidden select-none text-[10px] text-muted-300 sm:inline">
             ⋮⋮
           </span>
         </div>
@@ -237,7 +262,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
           {/* Chevron toggle — 独立按钮，不再包裹标题 */}
           <button
             onClick={() => dispatch({ type: 'SET_COLLAPSED', payload: { id: section.id, collapsed: !isCollapsed } })}
-            className="flex shrink-0 items-center px-2 py-2.5 text-gray-400 transition-colors hover:text-gray-600"
+            className="flex shrink-0 items-center px-2 py-2.5 text-muted-400 transition-colors hover:text-muted-600"
             title={isCollapsed ? '展开章节' : '折叠章节'}
           >
             <svg
@@ -251,7 +276,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
           </button>
           {/* 标题区域 — 纯 div，不触发折叠 */}
           <div
-            className="flex flex-1 items-center gap-2 px-1 py-2.5 min-w-0"
+            className="flex flex-1 cursor-pointer items-center gap-2 px-1 py-2.5 min-w-0"
             onClick={handleSectionFocus}
           >
             {editingHeading ? (
@@ -262,12 +287,12 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                 onBlur={handleHeadingSave}
                 onKeyDown={handleHeadingKeyDown}
                 onClick={(e) => e.stopPropagation()}
-                className="flex-1 rounded border border-indigo-200 bg-white px-2 py-0.5 text-sm font-medium text-gray-700 outline-none ring-2 ring-indigo-200"
+                className="flex-1 rounded border border-primary-200 bg-white px-2 py-0.5 text-sm font-medium text-muted-700 outline-none ring-2 ring-primary-200"
               />
             ) : (
               <div className="group flex flex-1 items-center gap-1 min-w-0">
                 <span
-                  className="flex-1 truncate text-sm font-medium text-gray-700"
+                  className="flex-1 truncate text-sm font-medium text-muted-700"
                   onDoubleClick={(e) => {
                     e.stopPropagation();
                     handleHeadingStartEdit();
@@ -283,7 +308,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); handleHeadingStartEdit(); } }}
                   role="button"
                   tabIndex={0}
-                  className="cursor-pointer rounded p-0.5 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 sm:opacity-0 sm:group-hover:opacity-100"
+                  className="cursor-pointer rounded p-0.5 text-muted-400 transition-all hover:bg-primary-50 hover:text-primary-500 sm:opacity-0 sm:group-hover:opacity-100"
                   title="编辑标题"
                   aria-label="编辑标题"
                 >
@@ -303,7 +328,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
             disabled={isFirst}
             title="上移"
             aria-label="上移章节"
-            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-white hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded p-1.5 text-muted-400 transition-colors hover:bg-white hover:text-muted-600 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -314,7 +339,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
             disabled={isLast}
             title="下移"
             aria-label="下移章节"
-            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-white hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded p-1.5 text-muted-400 transition-colors hover:bg-white hover:text-muted-600 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -325,7 +350,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
             disabled={total <= 1}
             title="删除章节"
             aria-label="删除章节"
-            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="rounded p-1.5 text-muted-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -338,11 +363,11 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
       {!isCollapsed && (
         <div>
           {/* Markdown toolbar */}
-          <div className="flex items-center gap-1 border-b border-gray-100 bg-gray-50/30 px-3 py-1.5">
+          <div className="flex items-center gap-1 border-b border-muted-100 bg-muted-50/30 px-3 py-1.5">
             {TOOLS.map((tool, ti) => (
               <span key={tool.action} className="flex items-center gap-1">
                 {ti > 0 && toolGroup[ti] !== toolGroup[ti - 1] && (
-                  <span className="mx-0.5 h-4 w-px bg-gray-200" />
+                  <span className="mx-0.5 h-4 w-px bg-muted-200" />
                 )}
                 <button
                   onClick={() => {
@@ -353,25 +378,26 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                     }
                   }}
                   title={tool.title}
-                  className="rounded px-2 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-white hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  aria-label={tool.title}
+                  className="min-h-[44px] sm:min-h-0 rounded px-2 py-0.5 text-xs font-medium text-muted-500 transition-colors hover:bg-white hover:text-muted-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
                 >
-                  {tool.label}
+                  {tool.label ? tool.label : <ToolIcon action={tool.action} />}
                 </button>
               </span>
             ))}
-            <span className="ml-auto text-[10px] text-gray-300">Markdown</span>
+            <span className="ml-auto text-[10px] text-muted-300">Markdown</span>
           </div>
 
           {/* 图片 URL 输入 */}
           {showImageInput && (
-            <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2">
+            <div className="border-b border-muted-100 bg-muted-50/50 px-4 py-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
                   type="text"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="图片 URL（支持 GitHub raw 链接）"
-                  className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="flex-1 rounded-md border border-muted-200 px-2.5 py-1.5 text-xs text-muted-700 placeholder-muted-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') insertImage();
@@ -383,7 +409,7 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   value={imageAlt}
                   onChange={(e) => setImageAlt(e.target.value)}
                   placeholder="替代文本（可选）"
-                  className="rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-36"
+                  className="rounded-md border border-muted-200 px-2.5 py-1.5 text-xs text-muted-700 placeholder-muted-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200 sm:w-36"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') insertImage();
                     if (e.key === 'Escape') { setShowImageInput(false); setImageUrl(''); setImageAlt(''); }
@@ -393,13 +419,13 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   <button
                     onClick={insertImage}
                     disabled={!imageUrl.trim()}
-                    className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                    className="rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
                   >
                     插入
                   </button>
                   <button
                     onClick={() => { setShowImageInput(false); setImageUrl(''); setImageAlt(''); }}
-                    className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-700"
+                    className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-500 transition-colors hover:text-muted-700"
                   >
                     取消
                   </button>
@@ -410,10 +436,10 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
                   <img
                     src={imageUrl}
                     alt="预览"
-                    className="h-12 w-auto rounded border border-gray-200 object-contain"
+                    className="h-12 w-auto rounded border border-muted-200 object-contain"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-muted-400">
                     {imageUrl.startsWith('http') ? '外部图片' : '将使用相对路径'}
                   </span>
                 </div>
@@ -441,9 +467,9 @@ export default function SectionEditor({ section, isFirst, isLast, total, section
         onConfirm={confirmDelete}
         title="确认删除"
         confirmText="确认删除"
-        confirmClassName="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-700"
+        confirmClassName="inline-flex items-center justify-center gap-2 rounded-button bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-700"
       >
-        <p className="text-sm text-gray-500">确定要删除「{section.heading || '未命名章节'}」吗？当前编辑内容将丢失。</p>
+        <p className="text-sm text-muted-500">确定要删除「{section.heading || '未命名章节'}」吗？当前编辑内容将丢失。</p>
       </Modal>
     </div>
   );

@@ -17,13 +17,15 @@ export interface Section {
   content: string;
 }
 
+import type { ReactNode } from 'react';
+
 export interface TemplateDef {
   id: string;
   name: string;
   description: string;
   preview: {
     gradient: string;
-    icon: string;
+    icon: ReactNode;
     accent: string;
   };
 }

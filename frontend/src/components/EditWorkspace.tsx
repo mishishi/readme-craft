@@ -162,27 +162,29 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
   }, [state.sections, diffSectionIds]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-100">
+    <div className="overflow-hidden rounded-card border border-muted-200 bg-white shadow-sm ring-1 ring-muted-100">
       {/* 工具栏 */}
-      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-muted-100 bg-muted-50/80 px-4 py-2.5">
         <div className="flex items-center gap-3">
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-            <span className="hidden sm:inline text-base">✏️</span>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-muted-900">
+            <svg className="hidden h-4 w-4 text-muted-500 sm:inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+            </svg>
             编辑工作区
           </h2>
-          <span className="hidden rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600 ring-1 ring-indigo-100 sm:inline">
+          <span className="hidden rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-600 ring-1 ring-primary-100 sm:inline">
             {sectionCount} 章节
           </span>
         </div>
 
         {/* 移动端 Tab 切换 */}
-        <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 sm:hidden">
+        <div className="flex items-center gap-1 rounded-button bg-muted-100 p-0.5 sm:hidden">
           <button
             onClick={() => setTab('editor')}
             className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
               tab === 'editor'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-muted-900 shadow-sm'
+                : 'text-muted-500 hover:text-muted-700'
             }`}
           >
             编辑
@@ -191,8 +193,8 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
             onClick={() => setTab('preview')}
             className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
               tab === 'preview'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-muted-900 shadow-sm'
+                : 'text-muted-500 hover:text-muted-700'
             }`}
           >
             预览
@@ -205,8 +207,9 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
         <button
           onClick={() => handleRegenerate()}
           disabled={regenerating}
-          className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50"
+          className="ml-2 inline-flex items-center gap-1.5 rounded-button border border-muted-200 bg-white px-3 py-1.5 text-xs font-medium text-muted-600 transition-all hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 disabled:opacity-50"
           title="重新生成 README 内容"
+          aria-label="重新生成 README"
         >
           {regenerating ? (
             <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -224,9 +227,9 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
 
       {/* 新手引导提示 — 从生成跳转过来时显示 */}
       {fromGeneration && !feedbackDismissed && (
-        <div className="border-b border-indigo-100 bg-indigo-50/80 px-4 py-2.5">
+        <div className="border-b border-primary-100 bg-primary-50/80 px-4 py-2.5">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
-            <p className="flex items-center gap-2 text-xs text-indigo-700">
+            <p className="flex items-center gap-2 text-xs text-primary-700">
               <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
               </svg>
@@ -234,7 +237,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
             </p>
             <button
               onClick={() => setFeedbackDismissed(true)}
-              className="shrink-0 rounded p-0.5 text-indigo-400 transition-colors hover:text-indigo-600"
+              className="shrink-0 rounded p-0.5 text-primary-400 transition-colors hover:text-primary-600"
               aria-label="关闭提示"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -246,7 +249,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
       )}
 
       {/* 编辑 + 预览内容区 */}
-      <div className="grid grid-cols-1 divide-y divide-gray-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+      <div className="grid grid-cols-1 divide-y divide-muted-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         <div className={tab === 'editor' ? '' : 'hidden sm:block'}>
           <EditorPanel diffSectionIds={diffSectionIds} />
         </div>
@@ -259,11 +262,11 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
       {fromGeneration && (
         <div className="fixed bottom-24 right-8 z-50 flex flex-col items-end gap-2">
           {showFeedbackFloating && (
-            <div className="w-[calc(100vw-2rem)] sm:w-80 rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5">
+            <div className="w-[calc(100vw-2rem)] sm:w-80 rounded-dialog border border-muted-200 bg-white shadow-2xl ring-1 ring-black/5">
               <div className="relative">
                 <button
                   onClick={() => setShowFeedbackFloating(false)}
-                  className="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  className="absolute right-2 top-2 z-10 rounded p-1 text-muted-400 transition-colors hover:bg-muted-100 hover:text-muted-600"
                   aria-label="关闭反馈面板"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -277,7 +280,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
                     onDismiss={() => {
                       trackEvent('feedback', { rating: 'positive' });
                       setShowFeedbackFloating(false);
-                      dispatch({ type: 'SHOW_TOAST', payload: { message: '感谢反馈！我们会持续改进 ✨', type: 'success' } });
+                      dispatch({ type: 'SHOW_TOAST', payload: { message: '感谢反馈！我们会持续改进', type: 'success' } });
                     }}
                     showInput={showFeedbackInput}
                     onShowInput={() => setShowFeedbackInput(true)}
@@ -295,7 +298,7 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
           )}
           <button
             onClick={() => setShowFeedbackFloating((v) => !v)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
             title="反馈与重新生成"
             aria-label="反馈与重新生成"
           >
@@ -307,28 +310,28 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
       )}
 
       {/* 状态栏 */}
-      <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2 text-xs text-gray-400">
+      <div className="flex items-center justify-between border-t border-muted-100 bg-muted-50/50 px-4 py-2 text-xs text-muted-400">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-1 w-1 rounded-full bg-gray-300" />
+            <span className="inline-block h-1 w-1 rounded-full bg-muted-300" />
             {sectionCount} 章节
           </span>
           {totalChars > 0 && (
             <>
-              <span className="text-gray-200">|</span>
+              <span className="text-muted-200">|</span>
               <span>{totalChars} 字符</span>
             </>
           )}
         </div>
         <span className="hidden items-center gap-2 sm:flex">
-          <span className="text-gray-200">|</span>
-          <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px] leading-none text-gray-400">⌘Z</kbd>
-          <span className="text-xs text-gray-400">撤销</span>
-          <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px] leading-none text-gray-400">⌘⇧Z</kbd>
-          <span className="text-xs text-gray-400">重做</span>
+          <span className="text-muted-200">|</span>
+          <kbd className="rounded border border-muted-200 bg-white px-1 py-0.5 text-[10px] leading-none text-muted-400">⌘Z</kbd>
+          <span className="text-xs text-muted-400">撤销</span>
+          <kbd className="rounded border border-muted-200 bg-white px-1 py-0.5 text-[10px] leading-none text-muted-400">⌘⇧Z</kbd>
+          <span className="text-xs text-muted-400">重做</span>
           <button
             onClick={() => setShowShortcuts(true)}
-            className="ml-1 flex h-7 w-7 items-center justify-center rounded border border-gray-200 bg-white text-xs font-medium text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            className="ml-1 flex max-sm:h-11 max-sm:w-11 sm:h-7 sm:w-7 items-center justify-center rounded border border-muted-200 bg-white text-xs font-medium text-muted-400 transition-colors hover:border-muted-300 hover:text-muted-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
             title="查看全部快捷键"
             aria-label="快捷键帮助"
           >
@@ -337,8 +340,8 @@ export default function EditWorkspace({ fromGeneration: propFrom, onBack }: Edit
         </span>
         {templateName && (
           <span className="flex items-center gap-1.5">
-            <span className="text-gray-200">模板</span>
-            <span className="rounded bg-indigo-50 px-1.5 py-0.5 font-medium text-indigo-600">{templateName}</span>
+            <span className="text-muted-300">模板</span>
+            <span className="rounded bg-primary-50 px-1.5 py-0.5 font-medium text-primary-600">{templateName}</span>
           </span>
         )}
       </div>

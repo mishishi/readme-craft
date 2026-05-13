@@ -17,11 +17,12 @@ interface GenerateResponse {
 // 设为 true 则使用 mock 数据，false 则调后端
 const USE_MOCK = false;
 
-export async function preScanProject(owner: string, repo: string, branch: string): Promise<void> {
+export async function preScanProject(owner: string, repo: string, branch: string, signal?: AbortSignal): Promise<void> {
   fetch('/api/pre-scan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ owner, repo, defaultBranch: branch }),
+    signal,
   }).catch(() => { /* background scan, ignore errors */ });
 }
 

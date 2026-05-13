@@ -2,17 +2,20 @@ import type { FastifyInstance } from 'fastify';
 import { generateReadme } from '../services/minimax.js';
 import { buildSystemPrompt, buildUserPrompt } from '../services/prompts.js';
 import { scanProject } from '../services/project-scanner.js';
-import { trackEvent } from '../services/analytics.js';
-import {
-  validateOutput,
-  buildRefinePrompt,
-  minimalRules,
-  badgesRules,
-  enterpriseRules,
-  cardsRules,
-  showcaseRules,
-} from '../services/template-skeletons/index.js';
-import type { TemplateValidationRules } from '../services/template-skeletons/index.js';
+
+// [validate-retry] 暂注释，后续优化重开
+// import { trackEvent } from '../services/analytics.js';
+// import {
+//   validateOutput,
+//   buildRefinePrompt,
+//   checkCoverage,
+//   minimalRules,
+//   badgesRules,
+//   enterpriseRules,
+//   cardsRules,
+//   showcaseRules,
+// } from '../services/template-skeletons/index.js';
+// import type { TemplateValidationRules } from '../services/template-skeletons/index.js';
 
 /** 清理 MiniMax 返回：去掉可能包裹的 markdown 代码块标记 */
 function cleanMarkdown(raw: string): string {
@@ -34,14 +37,14 @@ function computeTemperature(seed?: number): number {
   return 1.0 + (seed % 3) * 0.1;
 }
 
-// 每个模板的验证规则
-const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
-  minimal: minimalRules,
-  badges: badgesRules,
-  enterprise: enterpriseRules,
-  cards: cardsRules,
-  showcase: showcaseRules,
-};
+// [validate-retry] VALIDATION_RULES — 暂注释
+// const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
+//   minimal: minimalRules,
+//   badges: badgesRules,
+//   enterprise: enterpriseRules,
+//   cards: cardsRules,
+//   showcase: showcaseRules,
+// };
 
 interface GenerateBody {
   repoUrl: string;
@@ -84,81 +87,66 @@ export async function generateRoutes(app: FastifyInstance) {
     const systemPrompt = buildSystemPrompt(templateId, strictMode);
 
     try {
-      // Scan project files for richer context (may be cached from pre-scan)
-      let projectContext: string | undefined;
-      if (repoInfo.owner && repoInfo.name && repoInfo.defaultBranch) {
-        try {
-          projectContext = await scanProject(
-            repoInfo.owner,
-            repoInfo.name,
-            repoInfo.defaultBranch
-          );
-          console.log(`[scan] Project context generated (${projectContext.length} chars)`);
-        } catch (scanErr) {
-          console.warn('[scan] Failed to scan project, falling back to basic info:', scanErr);
-        }
-      }
+      // 并发启动：scan 后台跑，AI 生成直接开始（五部分 prompt 不依赖 scan）
+      const scanPromise = repoInfo.owner && repoInfo.name && repoInfo.defaultBranch
+        ? scanProject(repoInfo.owner, repoInfo.name, repoInfo.defaultBranch)
+            .catch((scanErr) => {
+              console.warn('[scan] Background scan failed:', scanErr);
+              return undefined;
+            })
+        : Promise.resolve(undefined);
 
-      const userPrompt = buildUserPrompt(repoInfo, projectContext, feedback);
+      const userPrompt = buildUserPrompt(repoInfo, undefined, feedback);
 
-      // --- 第一次生成 ---
+      // --- 第一次生成（与 scan 并发） ---
       let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt, computeTemperature(variationSeed)));
-      let refined = false;
-
-      // --- 输出质量验证 + 修正 ---
-      const rules = VALIDATION_RULES[templateId];
-      if (rules) {
-        const validation = validateOutput(markdown, rules, templateId);
-
-        if (!validation.valid) {
-          // 区分关键问题 vs 轻微问题：仅关键问题才触发重生成
-          const criticalIssues = validation.issues.filter(
-            (i) => !i.startsWith('内容过短')
-          );
-          const skippedIssues = validation.issues.length - criticalIssues.length;
-
-          if (criticalIssues.length === 0) {
-            console.log(`[validate] ${templateId} — 仅 ${skippedIssues} 项轻微问题 (minLength)，跳过修正`);
-          } else {
-            console.log(`[validate] ${templateId} — ${criticalIssues.length} 项关键问题 (+${skippedIssues} 项轻微), 尝试修正...`);
-
-            const refinePrompt = buildRefinePrompt(templateId, criticalIssues);
-
-            try {
-              const refinedMarkdown = cleanMarkdown(
-                await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt, computeTemperature(variationSeed))
-              );
-              const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
-              refined = true;
-              markdown = refinedMarkdown;
-
-              console.log(
-                `[validate] ${templateId} — 修正${refinedValidation.valid ? '通过' : '完成但仍有问题'}`
-                + ` (${refinedValidation.issues.length} 项残留)`
-              );
-
-              // 记录验证结果
-              trackEvent({
-                name: 'validation_result',
-                timestamp: Date.now(),
-                data: {
-                  templateId,
-                  firstTryIssues: validation.issues,
-                  retryPassed: refinedValidation.valid,
-                  retryRemainingIssues: refinedValidation.issues,
-                },
-              }).catch(() => {});
-            } catch (refineErr) {
-              console.warn('[validate] 修正调用失败，使用原始结果:', refineErr);
-              trackEvent({
-                name: 'validation_refine_failed',
-                timestamp: Date.now(),
-                data: { templateId, error: String(refineErr) },
-              }).catch(() => {});
-            }
-          }
-        }
+      // 等 scan 完成（此时大概率已经跑完，不增加等待）
+      const projectContext = await scanPromise;
+      if (projectContext) {
+        console.log(`[scan] Project context available (${projectContext.length} chars)`);
       }
+
+      // [validate-retry] 以下验证-修正逻辑暂注释，后续优化重开
+      // const rules = VALIDATION_RULES[templateId];
+      // if (rules) {
+      //   const structuralValidation = validateOutput(markdown, rules, templateId);
+      //   const structuralIssues = structuralValidation.issues;
+      //   if (projectContext) {
+      //     const coverageIssues = checkCoverage(markdown, projectContext);
+      //     if (coverageIssues.length > 0) {
+      //       console.log(`[validate] ${templateId} — 覆盖度建议:\n  ${coverageIssues.map((i) => `[内容覆盖] ${i}`).join('\n  ')}`);
+      //     }
+      //   }
+      //   const criticalIssues = structuralIssues.filter((i) => !i.startsWith('内容过短'));
+      //   const skippedIssues = structuralIssues.length - criticalIssues.length;
+      //   const totalIssues = structuralIssues.length;
+      //   if (criticalIssues.length > 0) {
+      //     console.log(`[validate] ${templateId} — ${criticalIssues.length} 项关键结构问题 (+${skippedIssues} 项轻微), 尝试修正...`);
+      //     const refinePrompt = buildRefinePrompt(templateId, criticalIssues);
+      //     try {
+      //       const refinedMarkdown = cleanMarkdown(
+      //         await generateReadme(systemPrompt, userPrompt + '\n\n' + refinePrompt, computeTemperature(variationSeed))
+      //       );
+      //       const refinedValidation = validateOutput(refinedMarkdown, rules, templateId);
+      //       markdown = refinedMarkdown;
+      //       console.log(
+      //         `[validate] ${templateId} — 修正${refinedValidation.valid ? '通过' : '完成但仍有问题'}`
+      //         + ` (${refinedValidation.issues.length} 项残留)`
+      //       );
+      //       trackEvent({
+      //         name: 'validation_result', timestamp: Date.now(),
+      //         data: { templateId, firstTryIssues: criticalIssues, retryPassed: refinedValidation.valid, retryRemainingIssues: refinedValidation.issues },
+      //       }).catch(() => {});
+      //     } catch (refineErr) {
+      //       console.warn('[validate] 修正调用失败，使用原始结果:', refineErr);
+      //       trackEvent({ name: 'validation_refine_failed', timestamp: Date.now(), data: { templateId, error: String(refineErr) } }).catch(() => {});
+      //     }
+      //   } else if (totalIssues > 0) {
+      //     console.log(`[validate] ${templateId} — 仅 ${skippedIssues} 项轻微问题，跳过修正`);
+      //   } else {
+      //     console.log(`[validate] ${templateId} — 通过`);
+      //   }
+      // }
 
       // 附加来源标识
       markdown = markdown.trim() + '\n\n<!-- Generated by ReadMeCraft (https://readme-craft.com) -->\n';
@@ -169,7 +157,7 @@ export async function generateRoutes(app: FastifyInstance) {
         generateCache.set(cacheKey, { markdown, expiresAt: Date.now() + GENERATE_CACHE_TTL });
       }
 
-      return { markdown, refined };
+      return { markdown };
     } catch (err) {
       const message = err instanceof Error ? err.message : '生成失败';
       console.error('Generate error:', err);

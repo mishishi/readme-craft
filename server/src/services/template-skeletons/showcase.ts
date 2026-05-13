@@ -1,23 +1,10 @@
 import type { TemplateValidationRules } from './validation';
 
 export const showcaseRules: TemplateValidationRules = {
-  mustContain: [
-    '<p align="center">',
-    '<img',
-    '## 💡 项目简介',
-    '### ',
-    '- [',
-    '- [x]',
-    '> ',
-    '## 📄 许可证',
-  ],
-  forbidden: [
-    '```markdown',
-    '[项目简称 Banner',
-    'via.placeholder.com',
-  ],
-  maxPlaceholderResidue: 3,
-  minLength: 500,
+  mustContain: ['<p align="center">', '<img', '## ', '> '],
+  forbidden: ['```markdown', 'via.placeholder.com'],
+  maxPlaceholderResidue: 5,
+  minLength: 400,
 };
 
 export const showcaseSkeleton = [

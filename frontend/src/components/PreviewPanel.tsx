@@ -2,6 +2,8 @@ import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useApp } from '../context/AppContext';
 import { assembleMarkdown } from '../services/markdown';
 
@@ -12,18 +14,16 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-function CodeBlock({ children }: { children: React.ReactNode }) {
+function CodeBlock({ language, children }: { language: string; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
-  const preRef = useRef<HTMLPreElement>(null);
+  const codeText = useMemo(() => String(children).replace(/\n$/, ''), [children]);
 
   const handleCopy = useCallback(async () => {
-    const codeEl = preRef.current?.querySelector('code');
-    const text = codeEl?.textContent || '';
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(codeText);
     } catch {
       const ta = document.createElement('textarea');
-      ta.value = text;
+      ta.value = codeText;
       ta.style.position = 'fixed';
       ta.style.opacity = '0';
       document.body.appendChild(ta);
@@ -33,13 +33,24 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, []);
+  }, [codeText]);
 
   return (
     <div className="group relative">
-      <pre ref={preRef} className="!overflow-x-auto !rounded-lg !bg-gray-900 !p-4 !pr-10 !text-sm !text-gray-100">
-        {children}
-      </pre>
+      <SyntaxHighlighter
+        style={oneDark}
+        language={language}
+        PreTag="div"
+        customStyle={{
+          borderRadius: '0.5rem',
+          margin: 0,
+          padding: '1rem 2.5rem 1rem 1rem',
+          fontSize: '0.875rem',
+          lineHeight: '1.5',
+        }}
+      >
+        {codeText}
+      </SyntaxHighlighter>
       <button
         onClick={handleCopy}
         className="absolute right-2 top-2 rounded-md bg-gray-700/50 p-1.5 text-gray-400 opacity-0 transition-all hover:bg-gray-600 hover:text-gray-200 group-hover:opacity-100 max-sm:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
@@ -175,21 +186,17 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
                 </a>
               ),
               code: ({ className, children, ...props }) => {
-                const isInline = !className;
-                if (isInline) {
+                const match = /language-(\w+)/.exec(className || '');
+                if (!match) {
                   return (
                     <code className="!rounded !bg-gray-100 !px-1.5 !py-0.5 !text-sm !text-gray-800">
                       {children}
                     </code>
                   );
                 }
-                return (
-                  <code className={`${className ?? ''} !bg-transparent !text-gray-100`}>
-                    {children}
-                  </code>
-                );
+                return <CodeBlock language={match[1]}>{children}</CodeBlock>;
               },
-              pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+              pre: ({ children }) => <>{children}</>,
               h2: ({ children, ...props }) => {
                 let text = '';
                 if (typeof children === 'string') text = children;

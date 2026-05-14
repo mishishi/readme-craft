@@ -2,7 +2,7 @@ import type { TemplateValidationRules } from './validation';
 
 export const neoMinimalRules: TemplateValidationRules = {
   mustContain: ['# ', '## ', '```'],
-  forbidden: ['<div', '<p align', 'shields.io', '😄', '👍', '🎉', '🚀', '✨', '🔥'],
+  forbidden: ['<div', '<p align', 'shields.io', 'via.placeholder.com', '😄', '👍', '🎉', '🚀', '✨', '🔥'],
   maxPlaceholderResidue: 2,
   minLength: 400,
 };
@@ -12,7 +12,7 @@ export const neoMinimalSkeleton = [
   '',
   '> [一句话项目定位，英文或中英双语]',
   '',
-  '![banner](https://via.placeholder.com/800x200)',
+  '![banner](https://placehold.co/800x200/1e293b/e2e8f0?text=Banner)',
   '',
   '---',
   '',

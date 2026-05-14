@@ -174,7 +174,7 @@ MIT © zhurenbao`,
   showcase: `# awesome-tool
 
 <p align="center">
-  <img src="https://via.placeholder.com/800x200/1a1a2e/e0e0e0?text=awesome-tool+Banner" alt="Banner" width="100%">
+  <img src="https://placehold.co/800x200/1a1a2e/e0e0e0?text=awesome-tool+Banner" alt="Banner" width="100%">
 </p>
 
 <p align="center">
@@ -189,8 +189,8 @@ MIT © zhurenbao`,
 
 ## 📸 预览
 
-![Dashboard](https://via.placeholder.com/600x350/f0f0f0/333?text=Dashboard+Preview)
-![Editor](https://via.placeholder.com/600x350/f0f0f0/333?text=Editor+Preview)
+![Dashboard](https://placehold.co/600x350/f0f0f0/333?text=Dashboard+Preview)
+![Editor](https://placehold.co/600x350/f0f0f0/333?text=Editor+Preview)
 
 ## 特性
 

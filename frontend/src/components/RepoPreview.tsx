@@ -135,7 +135,7 @@ export default function RepoPreview({ repoInfo, templateId }: { repoInfo: RepoIn
     case 'showcase':
       return (
         <div className="w-full overflow-hidden rounded-md">
-          <div className="flex h-10 items-center justify-center bg-gradient-to-r from-violet-600 via-purple-600 to-pink-500 px-3">
+          <div className="flex h-10 items-center justify-center bg-gradient-to-r from-primary-600 to-primary-500 px-3">
             <span className="text-[9px] font-semibold tracking-wider text-white/80">
               {name.toUpperCase()}
             </span>

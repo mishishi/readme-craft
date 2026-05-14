@@ -130,18 +130,24 @@ export default function ShowcaseSection() {
               tabIndex={-1}
               onClick={() => handleSelect(item)}
               disabled={isLoading}
-              className="w-56 shrink-0 snap-start rounded-card border border-muted-200 bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-muted-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-wait disabled:opacity-70"
+              className="flex flex-col w-56 shrink-0 snap-start rounded-card border border-muted-200 bg-white text-left shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-lg hover:ring-1 hover:ring-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-wait disabled:opacity-70"
             >
-              {/* 预览区 — 轻量梯度背景 */}
-              <div className={`rounded-t-card bg-gradient-to-br ${template.preview.gradient} p-3`}>
-                <div className="mb-1.5 flex items-center gap-1.5">
-                  <span className="flex items-center text-primary-500">{template.preview.icon}</span>
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-500">
-                    {template.name}
-                  </span>
+              {/* 模板预览 — 渐变背景 + icon + 模板名称 + TemplatePreview */}
+              {isLoading ? (
+                <div className="flex-1 rounded-t-card p-4 pb-3"><CompactSkeleton /></div>
+              ) : (
+                <div className={`flex flex-1 flex-col rounded-t-card bg-gradient-to-br ${template.preview.gradient} p-4 pb-3`}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex items-center text-primary-500">{template.preview.icon}</span>
+                    <span className="text-[10px] font-semibold tracking-wider text-muted-500">
+                      {template.name}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex-1 overflow-hidden rounded-md">
+                    <TemplatePreview id={item.template} />
+                  </div>
                 </div>
-                {isLoading ? <CompactSkeleton /> : <TemplatePreview id={item.template} />}
-              </div>
+              )}
 
               {/* 信息区 */}
               <div className="p-3">

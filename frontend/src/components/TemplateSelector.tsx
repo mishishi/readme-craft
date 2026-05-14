@@ -9,7 +9,8 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
   switch (id) {
     case 'minimal':
       return (
-        <div className="w-full rounded-md bg-white p-3 font-sans text-[10px] leading-relaxed text-muted-700">
+        <div className="w-full overflow-hidden rounded-md font-sans leading-relaxed">
+          <div className="p-2 text-[10px] text-muted-700">
           <div className="mb-1 text-xs font-bold text-muted-900">chalk</div>
           <p className="mb-1.5 text-[9px] leading-relaxed text-muted-500">
             Terminal string styling with expressive API, zero dependencies.
@@ -29,11 +30,13 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
             MIT © sindresorhus
           </div>
         </div>
+      </div>
       );
 
     case 'badges':
       return (
-        <div className="w-full rounded-md bg-white p-3">
+        <div className="w-full overflow-hidden rounded-md">
+          <div className="p-2">
           <div className="mb-2 flex flex-wrap gap-[3px]">
             <span className="rounded-sm bg-[#f59e0b] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">version 1.0</span>
             <span className="rounded-sm bg-[#f43f5e] px-1.5 py-[2px] text-[7px] font-medium text-white leading-none">MIT</span>
@@ -64,17 +67,13 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
           <div className="rounded bg-amber-50 p-1.5 text-[8px] text-amber-800">
             <span className="font-semibold">Stack:</span> React · TypeScript · Vite
           </div>
+          </div>
         </div>
       );
 
     case 'enterprise':
       return (
-        <div className="w-full rounded-md bg-white">
-          <div className="flex justify-center gap-1 border-b border-muted-200 bg-muted-50 px-3 py-2">
-            <span className="rounded-sm bg-primary-500 px-1.5 py-[2px] text-[7px] font-medium text-white">v2.0</span>
-            <span className="rounded-sm bg-primary-400 px-1.5 py-[2px] text-[7px] font-medium text-white">build</span>
-            <span className="rounded-sm bg-primary-700 px-1.5 py-[2px] text-[7px] font-medium text-white">MIT</span>
-          </div>
+        <div className="w-full overflow-hidden rounded-md">
           <div className="p-3 pt-2">
             <div className="mb-1.5 text-[10px] font-bold text-muted-900">Enterprise Dashboard</div>
             <div className="mb-2 overflow-hidden rounded border border-muted-200 text-[8px]">
@@ -103,7 +102,8 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
 
     case 'cards':
       return (
-        <div className="w-full rounded-md bg-gradient-to-br from-emerald-50 to-teal-50 p-3">
+        <div className="w-full overflow-hidden rounded-md">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-2">
           <div className="mb-1 flex items-center gap-1">
             <span className="text-[11px] font-bold text-muted-800">Chalk — 颜色工具</span>
           </div>
@@ -129,6 +129,7 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
             <span className="text-muted-500">npm</span>
             <span className="mx-1 text-emerald-400">→</span>
             <span className="text-muted-500">CLI</span>
+          </div>
           </div>
         </div>
       );
@@ -190,7 +191,7 @@ export default function TemplateSelector() {
 
   return (
     <>
-    <div id="template-selector" className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    <div id="template-selector" className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(5,14rem)] lg:justify-center">
       {templates.map((t) => {
         const selected = state.selectedTemplate === t.id;
         const rec = recommendations[t.id];
@@ -204,21 +205,24 @@ export default function TemplateSelector() {
               }
               trackEvent('template_selected', { templateId: t.id, templateName: t.name });
             }}
-            className={`group relative overflow-hidden rounded-card border-2 p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
-              selected
-                ? 'border-primary-500 bg-primary-50 shadow-md ring-1 ring-primary-500/20 animate-[scale-up_200ms_ease-out]'
-                : 'border-muted-200 bg-white hover:border-muted-300 hover:shadow-sm'
+            className={`group relative flex flex-col p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
+              selected ? 'animate-[scale-up_200ms_ease-out]' : ''
             }`}
           >
+          <div className={`flex flex-1 flex-col rounded-card border-2 relative ${
+            selected
+              ? 'border-primary-500 bg-primary-50 shadow-md ring-1 ring-primary-500/20'
+              : 'border-muted-200 bg-white hover:border-muted-300 hover:shadow-sm'
+          }`}>
             {/* 预览区域 */}
-            <div className={`bg-gradient-to-br ${t.preview.gradient} p-4 pb-3`}>
+            <div className={`flex flex-1 flex-col rounded-t-[16px] bg-gradient-to-br ${t.preview.gradient} p-4 pb-3`}>
               <div className="flex items-center gap-1.5">
                 <span className="flex items-center text-primary-500">{t.preview.icon}</span>
                 <span className={`text-[10px] font-semibold tracking-wider ${selected ? 'text-primary-600' : 'text-muted-500'}`}>
                   {t.name}
                 </span>
               </div>
-              <div className="mt-2">
+              <div className="mt-2 flex-1 overflow-hidden rounded-md">
                 {state.repoLoading ? (
                   <CompactSkeleton />
                 ) : state.repoInfo ? (
@@ -251,12 +255,12 @@ export default function TemplateSelector() {
               </span>
             </div>
 
-            {/* 选中指示器 */}
             {selected && (
               <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] text-white shadow-sm">
                 ✓
               </div>
             )}
+          </div>
           </button>
         );
       })}

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { generateReadme } from '../services/minimax.js';
 import { buildUserPrompt } from '../services/prompts.js';
-import { buildSystemPrompt } from '../services/templates/index.js';
+import { buildSystemPrompt, getTemplateConfig } from '../services/templates/index.js';
 import { scanProject } from '../services/project-scanner.js';
 
 // [validate-retry] 暂注释，后续优化重开
@@ -13,6 +13,7 @@ import { scanProject } from '../services/project-scanner.js';
 function cleanMarkdown(raw: string): string {
   return raw.replace(/^```markdown\s*\n?/i, '').replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
 }
+
 
 // 生成结果缓存（内存）
 const generateCache = new Map<string, { markdown: string; expiresAt: number }>();
@@ -90,6 +91,35 @@ export async function generateRoutes(app: FastifyInstance) {
 
       // --- 第一次生成（与 scan 并发） ---
       let markdown = cleanMarkdown(await generateReadme(systemPrompt, userPrompt, computeTemperature(variationSeed)));
+
+      // 附加 Banner（模板有内联 SVG 时，由系统后拼接，AI 不参与生成）
+      const templateConfig = getTemplateConfig(templateId);
+      if (templateConfig.banner) {
+        let banner = templateConfig.banner;
+        // 替换占位文本为实际仓库信息
+        const displayName = repoInfo.name
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        banner = banner.replace('Project Name', displayName);
+        if (repoInfo.description) {
+          // 取第一句做 tagline，去掉 emoji，保留原大小写
+          const tagline = repoInfo.description
+            .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .split(/[.。]/)[0]
+            .trim()
+            .slice(0, 35);
+          if (tagline) {
+            banner = banner.replace('BUILD THE FUTURE', tagline.toUpperCase());
+          }
+        }
+        if (repoInfo.language) {
+          banner = banner.replace('>TypeScript<', `>${repoInfo.language}<`);
+        }
+        markdown = banner + '\n\n' + markdown;
+      }
+
       // 等 scan 完成（此时大概率已经跑完，不增加等待）
       const projectContext = await scanPromise;
       if (projectContext) {

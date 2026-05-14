@@ -2,6 +2,8 @@ import type { TemplateValidationRules } from './validation.js';
 
 export interface TemplateConfig {
   id: string;
+  /** 内联 SVG Banner（由系统在生成后自动拼接，AI 不参与生成） */
+  banner?: string;
   skeleton: string;
   rules: TemplateValidationRules;
   styleRules: string;

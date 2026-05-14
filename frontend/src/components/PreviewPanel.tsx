@@ -2,7 +2,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
@@ -98,10 +98,18 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
   const [showToc, setShowToc] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  const markdown = useMemo(
+  const rawMarkdown = useMemo(
     () => assembleMarkdown(state.title, state.preamble, state.sections),
     [state.title, state.preamble, state.sections]
   );
+
+  // 项目展厅的 SVG banner 已包含项目名称，预览中隐藏 H1 标题避免重复
+  const markdown = useMemo(() => {
+    if (state.selectedTemplate === 'showcase') {
+      return rawMarkdown.replace(/^# .+(\n|$)/, '');
+    }
+    return rawMarkdown;
+  }, [rawMarkdown, state.selectedTemplate]);
 
   const toc = useMemo(() => {
     return state.sections
@@ -195,7 +203,36 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
           prose-pre:!bg-muted-900 prose-pre:!text-muted-100 prose-pre:!border-0">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            rehypePlugins={[
+              rehypeRaw,
+              [rehypeSanitize, {
+                ...defaultSchema,
+                clobberPrefix: '',
+                tagNames: [
+                  ...(defaultSchema.tagNames ?? []),
+                  'svg', 'defs', 'linearGradient', 'stop', 'rect', 'circle', 'path', 'text', 'g',
+                  'filter', 'feGaussianBlur', 'feMerge', 'feMergeNode', 'pattern', 'polygon', 'line', 'animate',
+                ],
+                attributes: {
+                  ...defaultSchema.attributes,
+                  svg: ['xmlns', 'viewBox', 'width', 'height', 'style', 'fill', 'role', 'aria-label'],
+                  rect: ['x', 'y', 'width', 'height', 'rx', 'fill', 'opacity', 'filter', 'stroke', 'strokeWidth', 'stroke-width'],
+                  circle: ['cx', 'cy', 'r', 'fill', 'opacity', 'filter', 'stroke', 'strokeWidth', 'stroke-width'],
+                  path: ['d', 'fill', 'stroke', 'strokeWidth', 'stroke-width', 'opacity'],
+                  text: ['x', 'y', 'fontFamily', 'fontSize', 'fontWeight', 'fill', 'textAnchor', 'opacity', 'letterSpacing', 'font-family', 'font-size', 'font-weight', 'text-anchor', 'letter-spacing'],
+                  linearGradient: ['id', 'x1', 'y1', 'x2', 'y2'],
+                  stop: ['offset', 'stopColor', 'stopOpacity', 'stop-color', 'stop-opacity'],
+                  filter: ['id', 'x', 'y', 'width', 'height'],
+                  feGaussianBlur: ['stdDeviation', 'result'],
+                  feMerge: [],
+                  feMergeNode: ['in'],
+                  pattern: ['id', 'x', 'y', 'width', 'height', 'patternUnits'],
+                  polygon: ['points', 'fill', 'stroke', 'strokeWidth', 'stroke-width', 'opacity'],
+                  line: ['x1', 'y1', 'x2', 'y2', 'stroke', 'strokeWidth', 'stroke-width', 'opacity'],
+                  animate: ['attributeName', 'values', 'dur', 'repeatCount'],
+                },
+              }]
+            ]}
             components={{
               a: ({ href, children }) => (
                 <a href={href} target="_blank" rel="noopener noreferrer">

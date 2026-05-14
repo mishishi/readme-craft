@@ -37,6 +37,8 @@ export function buildPromptFromConfig(config: TemplateConfig, strictMode?: boole
 
 3. **可验证** —— 所有技术名称、依赖、命令必须从项目信息中提取。不确定的内容用 [需补充] 标记，不要编造。
 
+4. **不输出 SVG 横幅** —— SVG Banner 由系统自动拼接，AI 只负责 Markdown 正文部分，禁止输出任何 \`<svg>\` 标签。
+
 ---
 
 ${styleRules}
@@ -60,7 +62,7 @@ ${templateChapters}
 
 ## 参考骨架
 
-以下是本模板的参考结构，在输出 README 时参考：
+以下是本模板的完整输出结构。
 
 ${skeleton}
 

@@ -3,10 +3,98 @@ import { buildSystemPrompt } from './prompt.js';
 
 export const config: TemplateConfig = {
   id: 'showcase',
-  skeleton: [
+  banner: [
     '<p align="center">',
-    '  <img src="https://placehold.co/900x240/1a1a2e/e0e0e0?text=[项目简称 Banner]" alt="[项目名称] Banner" width="100%" />',
+    '  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="100%" style="max-width:900px; border-radius:12px;">',
+    '    <defs>',
+    '      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">',
+    '        <stop offset="0%" stop-color="#1a2332" />',
+    '        <stop offset="100%" stop-color="#0d1520" />',
+    '      </linearGradient>',
+    '      <linearGradient id="glowGrad" x1="0" y1="0" x2="1" y2="1">',
+    '        <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.3" />',
+    '        <stop offset="100%" stop-color="#00e5ff" stop-opacity="0" />',
+    '      </linearGradient>',
+    '      <filter id="glow">',
+    '        <feGaussianBlur stdDeviation="3" result="blur" />',
+    '        <feMerge>',
+    '          <feMergeNode in="blur" />',
+    '          <feMergeNode in="SourceGraphic" />',
+    '        </feMerge>',
+    '      </filter>',
+    '      <filter id="nodeGlow">',
+    '        <feGaussianBlur stdDeviation="2" result="blur" />',
+    '        <feMerge>',
+    '          <feMergeNode in="blur" />',
+    '          <feMergeNode in="SourceGraphic" />',
+    '        </feMerge>',
+    '      </filter>',
+    '    </defs>',
+    '    <rect width="900" height="280" fill="url(#bg)" />',
+    '    <rect x="0" y="0" width="900" height="3" fill="#00e5ff" opacity="0.4" />',
+    '    <path d="M 40 60 L 120 60 L 120 100 L 200 100" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.5" />',
+    '    <path d="M 60 120 L 140 120 L 140 80 L 220 80" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.35" />',
+    '    <path d="M 30 180 L 100 180 L 100 140 L 180 140" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <path d="M 80 220 L 160 220 L 160 200 L 240 200" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.3" />',
+    '    <path d="M 700 60 L 780 60 L 780 100 L 860 100" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.5" />',
+    '    <path d="M 680 120 L 760 120 L 760 80 L 840 80" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.35" />',
+    '    <path d="M 720 180 L 800 180 L 800 140 L 870 140" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <path d="M 660 220 L 740 220 L 740 200 L 820 200" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.3" />',
+    '    <path d="M 200 100 L 260 100 L 260 130 L 320 130" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.25" />',
+    '    <path d="M 580 130 L 640 130 L 640 100 L 700 100" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.25" />',
+    '    <path d="M 240 200 L 300 200 L 300 170 L 350 170" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.25" />',
+    '    <path d="M 550 170 L 600 170 L 600 200 L 660 200" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.25" />',
+    '    <circle cx="40" cy="60" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="200" cy="100" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="60" cy="120" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="220" cy="80" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="30" cy="180" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="180" cy="140" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="80" cy="220" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="240" cy="200" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="700" cy="60" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="860" cy="100" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="680" cy="120" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="840" cy="80" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="720" cy="180" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="870" cy="140" r="3" fill="#00e5ff" opacity="0.6" />',
+    '    <circle cx="660" cy="220" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="820" cy="200" r="2.5" fill="#00e5ff" opacity="0.45" />',
+    '    <circle cx="320" cy="130" r="5" fill="#00e5ff" filter="url(#nodeGlow)" opacity="0.8" />',
+    '    <circle cx="550" cy="170" r="5" fill="#00e5ff" filter="url(#nodeGlow)" opacity="0.8" />',
+    '    <rect x="370" y="90" width="160" height="100" rx="6" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.3" />',
+    '    <rect x="380" y="100" width="140" height="80" rx="4" fill="#00e5ff" opacity="0.06" />',
+    '    <line x1="400" y1="90" x2="400" y2="80" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="420" y1="90" x2="420" y2="78" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="440" y1="90" x2="440" y2="82" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="460" y1="90" x2="460" y2="78" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="480" y1="90" x2="480" y2="80" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="500" y1="90" x2="500" y2="82" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="400" y1="190" x2="400" y2="200" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="420" y1="190" x2="420" y2="202" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="440" y1="190" x2="440" y2="198" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="460" y1="190" x2="460" y2="202" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="480" y1="190" x2="480" y2="200" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="500" y1="190" x2="500" y2="198" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="370" y1="120" x2="360" y2="120" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="370" y1="140" x2="358" y2="140" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="370" y1="160" x2="360" y2="160" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="530" y1="120" x2="540" y2="120" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="530" y1="140" x2="542" y2="140" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <line x1="530" y1="160" x2="540" y2="160" stroke="#00e5ff" stroke-width="1.5" opacity="0.4" />',
+    '    <rect x="395" y="115" width="110" height="50" rx="2" fill="none" stroke="#00e5ff" stroke-width="0.8" opacity="0.25" />',
+    '    <circle cx="450" cy="140" r="12" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.2" />',
+    '    <circle cx="450" cy="140" r="4" fill="#00e5ff" opacity="0.15" />',
+    '    <rect x="300" y="50" width="300" height="190" fill="url(#glowGrad)" />',
+    '    <text x="450" y="152" text-anchor="middle" font-family="\'Inter\',\'Segoe UI\',sans-serif" font-size="34" font-weight="700" fill="#ffffff" letter-spacing="2">Project Name</text>',
+    '    <text x="450" y="178" text-anchor="middle" font-family="\'Inter\',\'Segoe UI\',sans-serif" font-size="12" font-weight="400" fill="#00e5ff" letter-spacing="3" opacity="0.8">BUILD THE FUTURE</text>',
+    '    <rect x="410" y="200" width="80" height="22" rx="11" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.25" />',
+    '    <text x="450" y="214" text-anchor="middle" font-family="\'Inter\',\'Segoe UI\',sans-serif" font-size="10" font-weight="500" fill="#00e5ff" letter-spacing="1" opacity="0.8">TypeScript</text>',
+    '    <rect x="0" y="277" width="900" height="3" fill="#00e5ff" opacity="0.4" />',
+    '  </svg>',
     '</p>',
+  ].join('\n'),
+  skeleton: [
     '',
     '<p align="center">',
     '  <img src="https://img.shields.io/badge/[标签]-[值]-[颜色]?style=for-the-badge" />',
@@ -116,9 +204,6 @@ export const config: TemplateConfig = {
 ## 模板风格约束
 
 模板「项目展厅」：
-- 保留 Banner 的 \`<p align="center">\` 和 \`<img>\` 结构
-- 项目简介使用叙事性段落（非功能列表），讲述项目的缘起、里程碑和愿景
-- 保留 \`>\` 引用块用于引语（头部引语、结束语），保留 checkbox 列表用于路线图
 - shields.io badges 展示项目核心元数据，AI 根据项目选择 badge 种类和颜色（考虑 badge 风格一致性）
 - 所有标题保留 emoji 前缀（💡✨🛠️⚡🚀🗺️🤝📄）
 - 避免代码块过多，以展示性内容为主
@@ -126,16 +211,15 @@ export const config: TemplateConfig = {
   chapters: `
 根据模板「项目展厅」的固定结构，必须包含以下元素（顺序固定，不可缺少）：
 
-1. **Banner 区域**：\`<p align="center">\` 结构中的 Banner 图片
-2. **引语**：\`>\` 引用块，一句关于项目愿景或理念的话
-3. **项目简介**：3 段叙事性段落（背景→发展→愿景）
-4. **核心特性**：每项 \`###\` 三级标题 + 描述段落
-5. **技术栈**：列表项，格式为 \`**[技术名]** — 选择原因\`
-6. **安装**：前置要求 + 安装命令
-7. **快速开始**：基本使用 + 进阶示例
-8. **路线图**：checkbox 列表
-9. **贡献指南**
-10. **许可证** + 结束语引用块
+1. **引语**：\`>\` 引用块，一句关于项目愿景或理念的话
+2. **项目简介**：3 段叙事性段落（背景→发展→愿景）
+3. **核心特性**：每项 \`###\` 三级标题 + 描述段落
+4. **技术栈**：列表项，格式为 \`**[技术名]** — 选择原因\`
+5. **安装**：前置要求 + 安装命令
+6. **快速开始**：基本使用 + 进阶示例
+7. **路线图**：checkbox 列表
+8. **贡献指南**
+9. **许可证** + 结束语引用块
 
 额外要求：\`---\` 分隔线分割每个大章节；特性章节的每项使用 \`###\` 三级标题配 emoji；技术栈章节无需表格`,
 };

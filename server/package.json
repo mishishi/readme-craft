@@ -3,17 +3,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "lsof -ti:3001 | xargs kill -9 2>/dev/null; NODE_TLS_REJECT_UNAUTHORIZED=0 tsx watch src/index.ts",
+    "dev": "lsof -ti:3001 | xargs kill -9 2>/dev/null; unset SSL_CERT_FILE; HTTPS_PROXY=http://127.0.0.1:7890 NODE_TLS_REJECT_UNAUTHORIZED=0 tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "unset SSL_CERT_FILE; node dist/index.js"
   },
   "dependencies": {
-    "@fastify/cors": "^9.0.1",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.1.0",
     "dotenv": "^16.4.5",
-    "fastify": "^4.28.0",
-    "sql.js": "^1.14.1"
+    "fastify": "^5.8.5",
+    "jsonwebtoken": "^9.0.3",
+    "sql.js": "^1.14.1",
+    "undici": "^8.2.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.14.0",
     "@types/sql.js": "^1.4.11",
     "tsx": "^4.16.0",

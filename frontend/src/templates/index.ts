@@ -4,5 +4,7 @@ import { badges } from './badges';
 import { enterprise } from './enterprise';
 import { cards } from './cards';
 import { showcase } from './showcase';
+import { zhType } from './zh-type';
+import { neoMinimal } from './neo-minimal';
 
-export const templates: TemplateDef[] = [minimal, badges, enterprise, cards, showcase];
+export const templates: TemplateDef[] = [minimal, badges, enterprise, cards, showcase, zhType, neoMinimal];

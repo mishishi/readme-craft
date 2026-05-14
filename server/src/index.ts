@@ -1,21 +1,29 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
 import { generateRoutes } from './routes/generate.js';
 import { repoRoutes } from './routes/repo.js';
 import { preScanRoutes } from './routes/pre-scan.js';
 import { analyticsRoutes } from './routes/analytics.js';
+import { authRoutes } from './routes/auth.js';
+import { initDb } from './services/db.js';
 
 const port = parseInt(process.env.PORT || '3001', 10);
 
 const app = Fastify({ logger: true });
 
-await app.register(cors, { origin: true });
+await app.register(cors, { origin: true, credentials: true });
+await app.register(cookie);
+
+// 初始化数据库
+await initDb();
 
 await app.register(generateRoutes, { prefix: '/api' });
 await app.register(repoRoutes, { prefix: '/api' });
 await app.register(preScanRoutes, { prefix: '/api' });
 await app.register(analyticsRoutes, { prefix: '/api' });
+await app.register(authRoutes, { prefix: '/api' });
 
 app.get('/api/health', async () => ({
   status: 'ok',

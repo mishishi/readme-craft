@@ -1,6 +1,7 @@
 import { useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import { trackEvent } from './services/tracking';
 import ToastContainer from './components/Toast';
@@ -10,6 +11,7 @@ import SkipLink from './components/SkipLink';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const EditorPage = lazy(() => import('./pages/EditorPage'));
 const AdminLayout = lazy(() => import('./components/AdminLayout'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 
 function PageSkeleton() {
   return (
@@ -71,18 +73,20 @@ function AppRoutes() {
 
   const isAdmin = location.pathname.startsWith('/admin');
   const isEditor = location.pathname === '/editor';
+  const isAuth = location.pathname === '/auth/callback';
 
   const fallback = <PageSkeleton />;
 
   return (
     <div className="flex min-h-screen flex-col">
       <SkipLink />
-      {!isAdmin && <Header />}
+      {!isAdmin && !isAuth && <Header />}
 
       <main id="main-content" className={`relative mx-auto w-full flex-1 bg-white px-4 pb-12 pt-6 ${isAdmin ? 'max-w-6xl' : 'max-w-7xl'}`}>
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Suspense fallback={fallback}><HomePage /></Suspense>} />
+            <Route path="/auth/callback" element={<Suspense fallback={fallback}><AuthCallback /></Suspense>} />
             <Route
               path="/editor"
               element={
@@ -100,7 +104,7 @@ function AppRoutes() {
         </ErrorBoundary>
       </main>
 
-      {!isAdmin && !isEditor && (
+      {!isAdmin && !isEditor && !isAuth && (
         <footer className="border-t border-muted-200 bg-white py-4 text-center text-sm text-muted-400">
           <div className="flex items-center justify-center gap-3">
             <span>ReadMeCraft — 中文 README 生成器</span>
@@ -130,9 +134,11 @@ const AdminAnalytics = lazy(() => import('./components/AnalyticsDashboard'));
 export default function App() {
   return (
     <BrowserRouter>
-      <ErrorBoundary>
-        <AppRoutes />
-      </ErrorBoundary>
+      <AuthProvider>
+        <ErrorBoundary>
+          <AppRoutes />
+        </ErrorBoundary>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

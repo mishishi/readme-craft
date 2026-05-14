@@ -23,6 +23,7 @@ export interface TemplateDef {
   id: string;
   name: string;
   description: string;
+  premium?: boolean;
   preview: {
     gradient: string;
     icon: ReactNode;

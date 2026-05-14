@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3002,
+    port: 3002, // 注意：同步 server .env 中的 FRONTEND_URL
     proxy: {
       '/api': {
         target: 'http://localhost:3001',

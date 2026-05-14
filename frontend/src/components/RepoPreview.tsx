@@ -159,6 +159,53 @@ export default function RepoPreview({ repoInfo, templateId }: { repoInfo: RepoIn
           </div>
         </div>
       );
+    case 'zh-type':
+      return (
+        <div className="w-full overflow-hidden rounded-md font-sans leading-relaxed">
+          <div className="p-2 text-[10px] text-amber-950">
+            <div className="mb-1 text-xs font-bold text-amber-900 tracking-wide">{name}</div>
+            <blockquote className="mb-1.5 border-l-2 border-amber-300 pl-2 text-[9px] italic leading-relaxed text-amber-700">
+              {description?.slice(0, 40) || '项目定位描述'}
+            </blockquote>
+            <div className="mb-1.5 border-t border-amber-200 pt-1.5 text-[9px] font-medium text-amber-800">
+              特性
+            </div>
+            <ul className="mb-1.5 list-inside list-disc space-y-[2px] text-[9px] text-amber-700">
+              <li><strong>模块化设计</strong> — 解耦清晰，易于扩展</li>
+              <li><strong>类型安全</strong> — 完善的 TypeScript 类型推导</li>
+              <li><strong>开发体验</strong> — 开箱即用，零配置启动</li>
+            </ul>
+            <div className="rounded bg-amber-100/80 p-1.5 font-mono text-[8px] text-amber-900">
+              {language ? `${language.toLowerCase()} install ${name}` : 'npm install'}
+            </div>
+            <div className="mt-1.5 border-t border-amber-200 pt-1 text-[8px] text-amber-500">
+              {license || 'MIT'} © {owner}
+            </div>
+          </div>
+        </div>
+      );
+    case 'neo-minimal':
+      return (
+        <div className="w-full overflow-hidden rounded-md font-sans leading-relaxed">
+          <div className="bg-slate-900 p-2 text-[10px] text-slate-300">
+            <div className="mb-1 text-xs font-bold text-white tracking-tight">{name}</div>
+            <p className="mb-1.5 text-[9px] leading-relaxed text-slate-400 italic">
+              {description?.slice(0, 50) || 'Project description placeholder.'}
+            </p>
+            <div className="mb-1.5 flex flex-wrap gap-1">
+              <span className="rounded-sm border border-slate-600 px-1 py-[1px] text-[7px] font-medium text-slate-300">{language || 'TypeScript'}</span>
+              <span className="rounded-sm border border-slate-600 px-1 py-[1px] text-[7px] font-medium text-slate-300">Modern</span>
+              <span className="rounded-sm border border-slate-600 px-1 py-[1px] text-[7px] font-medium text-slate-300">{license || 'MIT'}</span>
+            </div>
+            <div className="mb-1.5 rounded border border-slate-700 bg-slate-800 p-1.5 font-mono text-[8px] text-emerald-400">
+              # {name} architecture
+            </div>
+            <div className="rounded border border-slate-700 bg-slate-800 p-1.5 font-mono text-[8px] text-slate-300">
+              {language ? `${language.toLowerCase()} install ${name}` : 'npm install'}
+            </div>
+          </div>
+        </div>
+      );
     default:
       return (
         <div className="w-full rounded-md bg-white p-3 text-[10px] text-muted-700">

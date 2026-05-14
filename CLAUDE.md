@@ -1,89 +1,108 @@
-# CLAUDE.md
+# readme-craft
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+中文 GitHub README 生成器。输入仓库地址，选模板，AI 一键生成 README。
 
-## Project Overview
+**Stack:** React 19 + TypeScript + Vite + Tailwind CSS v3 (前端) · Fastify ESM (后端) · MiniMax API (AI)
 
-**readme-craft** — 中文 GitHub README 生成器。输入仓库地址，选模板，AI 一键生成 README。
+Status: 5 模板功能完整，生产部署中。支付未集成。
+
+## Quick Start
+
+```bash
+npm run dev              # 同时启动前端 (5173) + 后端 (3001)
+npm run dev:server       # 仅后端 (watch)
+npm run dev:frontend     # 仅前端 (Vite HMR)
+npm run build            # 构建前端 → frontend/dist/
+npm run install:all      # 安装根目录 + 前后端所有依赖
+```
 
 ## Architecture
 
 ```
 readme-craft/
-├── frontend/          # Vite + React + Tailwind SPA
-│   └── src/
-│       ├── components/    # UI 组件
-│       ├── context/       # 全局状态 (useReducer)
-│       ├── services/      # API 调用、Markdown 解析、GitHub 接口
-│       └── templates/     # 5 个模板定义
-├── server/            # Fastify 后端
-│   └── src/
-│       ├── routes/        # API 路由
-│       └── services/      # MiniMax API 集成、Prompt 构建
+├── frontend/src/
+│   ├── components/   # 每文件一组件，default export
+│   ├── context/      # 三层 Context (Repo + Editor + UI)
+│   ├── services/     # API / GitHub / Markdown / 事件追踪
+│   ├── templates/    # 5 个模板定义
+│   └── types/        # AppState, AppAction (26 种), RepoInfo
+├── server/src/
+│   ├── routes/       # generate / repo / pre-scan / analytics
+│   └── services/     # MiniMax 集成 / Prompt 构建
+└── docs/
+    ├── audit/        # v1-v9 审计报告
+    └── claude/       # 参考文档 (@imports)
 ```
 
 ### 数据流
 
 ```
-GitHub URL → 前端调 GitHub API → 展示仓库信息
-用户选模板 → 前端调 POST /api/generate-readme
-后端调 MiniMax API → 返回 Markdown → 前端解析为可编辑章节
-表单编辑 ↔ 实时预览 → 一键复制 / 下载 .md
+GitHub URL → fetchRepoInfo() → POST /api/fetch-repo-info → GitHub API → 展示仓库信息
+用户选模板 → POST /api/generate-readme → MiniMax API → Markdown → 解析为 Sections
+表单编辑 (useReducer) ↔ 实时预览 → 一键复制 / 下载 .md
 ```
 
-## Commands
+### 状态管理
 
-```bash
-npm run dev              # 同时启动前端 (5173) + 后端 (3001)
-npm run dev:server       # 仅启动后端 (watch 模式)
-npm run dev:frontend     # 仅启动前端 (Vite HMR)
-npm run build            # 构建前端 → frontend/dist/
-npm run install:all      # 安装根目录 + 前后端所有依赖
+三层 Context 嵌套，共享同一个 `AppAction` discriminated union：
+```
+RepoContext (repo URL / repoInfo / loading)
+  → EditorContext (模板 / sections / undo/redo)
+    → UIContext (toasts)
+      → CombinedProvider (合并 state，透传 dispatch)
 ```
 
-## Key Configuration
+## Conventions
 
-- **后端端口**: `server/.env` 中的 `PORT`（默认 3001）
-- **MiniMax**: `server/.env` 配置 `MINIMAX_API_KEY` 和 `MINIMAX_MODEL`
-- **Vite 代理**: 开发时 `/api` 自动转发到后端 3001 端口（`frontend/vite.config.ts`）
-- **环境变量模板**: `server/.env.example` — 复制为 `.env` 后填写
+### Naming
+| 类别 | 规则 |
+|------|------|
+| 组件文件 | PascalCase: `TemplateSelector.tsx` |
+| 非组件文件 | camelCase: `api.ts`, `editorReducer.ts` |
+| 类型/接口 | PascalCase: `RepoInfo`, `AppAction` |
+| 变量/函数 | camelCase: `handleSelect`, `loadingRepo` |
+| 常量 | UPPER_SNAKE: `MAX_HISTORY` |
 
-## VCS (`.gitignore`)
+### Components
+- 每文件一组件，**default export**
+- Props 用 `interface {ComponentName}Props`
+- 事件处理用 `useCallback` 包裹
+- 异步操作用 `try/catch/finally` + AbortSignal 取消
 
-根目录 `.gitignore` 统一管理整个仓库的忽略规则：
-- `node_modules/` — 根目录 + 所有子包依赖
-- `dist/` / `*.tsbuildinfo` — 前端和后端构建产物
-- `.env`, `.env.*local` — 敏感环境变量
-- IDE (`/.idea/`, `.vscode/`)、OS (`.DS_Store`)、日志 (`*.log`) 等
+### Styling
+- **ALWAYS** use Tailwind design tokens: `text-brand-600`, `shadow-card`, `rounded-button`
+- **NEVER** use inline styles, hardcoded colors (`text-blue-600`), or emoji as icons
+- **NEVER** add `z-0` to `<main>` — creates stacking context that breaks sticky header
 
-## API
+### Template System
+⚠️ **YOU MUST** sync all 4 files when modifying a template:
+1. `frontend/src/templates/index.ts` — 模板定义
+2. `frontend/src/components/TemplatePreview.tsx` — 静态 HTML 预览
+3. `frontend/src/components/RepoPreview.tsx` — 动态仓库信息预览
+4. `server/src/services/prompts.ts` — AI prompt
 
-`POST /api/generate-readme`
+### Commit Messages
+- 用**中文**写，描述动机而非代码变更
+- 前缀: `feat:` / `fix:` / `ci:` / `docs:` / `debug:` / `test:`
 
-```json
-{
-  "repoUrl": "https://github.com/owner/repo",
-  "templateId": "minimal|badges|enterprise|cards|showcase",
-  "repoInfo": { "name": "...", "description": "...", ... }
-}
-// → { "markdown": "# Title\n\n## Section\n..." }
-```
+## Gotchas
 
-## 模板系统
+### CSS / Rendering
+- `backdrop-blur-xl` + `position: sticky` 在 Chrome 中会导致 z-index stacking context 异常。如果 header 被内容覆盖，**NEVER** 在 `<main>` 上加 `z-0`，尝试调高 `z-header` 值。目前该问题已缓解但未彻底修复。
+- z-index 层级: header(50) / dropdown(55) / toast(60) / modal(60) / fab(65) / backToTop(70)
 
-5 个模板定义在 `frontend/src/templates/index.ts`：
-- **极简清风** — 干净留白
-- **Badge 大满贯** — badge 墙 + 功能卡片
-- **企业蓝图** — 正式专业，表格化
-- **卡片视界** — 卡片式布局
-- **项目展厅** — Banner + 截图展示
+### Server (Fastify ESM)
+- **ALWAYS** use `.js` extension in relative imports: `import from './foo.js'` — 否则运行时报错
+- **NEVER** rsync with `--delete` unless `.env` is confirmed excluded (`.gitignore` rules)
+- MiniMax API 可能超时或返回空内容，前端有中文错误提示
 
-每个模板的 AI prompt 在 `server/src/services/prompts.ts` 中定义。
+### Frontend
+- **NEVER** use `crypto.randomUUID` — HTTP 环境不支持，用 `uuid()` 工具函数
+- `historyIndex` **MUST** point to `history.length - 1` after latest state — UNDO/REDO 前调用 `pushHistory()`
 
-## Available Skills
+## Reference
 
-- **ui-ux-pro-max** — UI/UX 设计系统工具（Python 脚本）
-
-  ```bash
-  python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system -p "Name"
-  ```
+- @docs/claude/api-reference.md — API 路由详情、请求/响应格式
+- @docs/claude/architecture-decisions.md — 技术选型决策表
+- @docs/claude/state-architecture.md — 三层 Context 详解 + 持久化策略
+- @docs/claude/deployment.md — CI/CD / PM2 / rsync 部署

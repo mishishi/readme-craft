@@ -4,6 +4,8 @@ import {
   enterpriseSkeleton,
   cardsSkeleton,
   showcaseSkeleton,
+  zhTypeSkeleton,
+  neoMinimalSkeleton,
 } from './template-skeletons/index.js';
 
 interface RepoInfo {
@@ -23,6 +25,8 @@ const TEMPLATE_SKELETONS: Record<string, string> = {
   enterprise: enterpriseSkeleton,
   cards: cardsSkeleton,
   showcase: showcaseSkeleton,
+  'zh-type': zhTypeSkeleton,
+  'neo-minimal': neoMinimalSkeleton,
 };
 
 // ===== 精简风格规则（每个模板 3-4 条） =====
@@ -67,6 +71,27 @@ const TEMPLATE_STYLE_RULES: Record<string, string> = {
 - 保留 Banner 的 \`<p align="center">\` 和 \`<img>\` 结构
 - 项目简介使用叙事性段落（非功能列表）
 - 保留 \`>\` 引用块用于引语，保留 checkbox 列表用于路线图`,
+
+  'zh-type': `
+## 模板风格约束
+
+模板「汉字风韵」：
+- 整体使用中文行文，章节标题不含 emoji
+- 使用 \`---\` 分隔线分割大段落
+- 简介部分用 \`>\` 引用块写一句诗意的项目定位
+- 表格用于技术栈信息，特性用加粗列表展示
+- 代码块使用正确的语言标签，禁止 mermaid 图表`,
+
+  'neo-minimal': `
+## 模板风格约束
+
+模板「极简·Pro」：
+- 完全禁止 emoji（包括标题和特性列表）
+- 保留 mermaid 图表（仅限 flowchart），禁止其他图表类型
+- 使用 \`---\` 分隔线分割章节
+- API 参考使用标准表格格式（参数、类型、默认值、描述）
+- 特性使用加粗标签式列表（**Label** — Description）
+- 代码块使用正确的语言标签，可以保留 Banner 图片占位结构`,
 };
 
 export function buildSystemPrompt(templateId: string, strictMode?: boolean): string {

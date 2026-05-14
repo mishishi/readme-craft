@@ -4,6 +4,7 @@ export interface RepoInfo {
   description: string;
   language: string;
   stars: number;
+  forks: number;
   topics: string[];
   owner: string;
   license: string | null;
@@ -17,18 +18,21 @@ export interface Section {
   content: string;
 }
 
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentType } from 'react';
 
 export interface TemplateDef {
   id: string;
   name: string;
   description: string;
   premium?: boolean;
+  recommendation?: string;
   preview: {
     gradient: string;
     icon: ReactNode;
     accent: string;
   };
+  Preview: ComponentType<{}>;
+  RepoPreview: ComponentType<{ repoInfo: RepoInfo }>;
 }
 
 export interface AppState {
@@ -91,4 +95,5 @@ export type AppAction =
   | { type: 'SHOW_RESULT_CARD' }
   | { type: 'HIDE_RESULT_CARD' }
   | { type: 'SET_STRICT_MODE'; payload: boolean }
+  | { type: 'SET_EDITOR_OPEN'; payload: boolean }
   | { type: 'RESTORE_FROM_HISTORY'; payload: { title: string; preamble: string; sections: Section[]; templateId: string } };

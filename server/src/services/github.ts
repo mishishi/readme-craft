@@ -4,6 +4,7 @@ interface GitHubRepo {
   description: string | null;
   language: string | null;
   stargazers_count: number;
+  forks_count: number;
   topics: string[];
   owner: { login: string };
   license: { spdx_id: string } | null;
@@ -17,6 +18,7 @@ interface RepoInfo {
   description: string;
   language: string;
   stars: number;
+  forks: number;
   topics: string[];
   owner: string;
   license: string | null;
@@ -86,6 +88,7 @@ export async function fetchRepoInfo(
     description: d.description || '',
     language: d.language || '',
     stars: d.stargazers_count,
+    forks: d.forks_count,
     topics: d.topics || [],
     owner: d.owner.login,
     license: d.license?.spdx_id || null,

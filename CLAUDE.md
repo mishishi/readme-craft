@@ -9,7 +9,7 @@ Status: 5 模板功能完整，生产部署中。支付未集成。
 ## Quick Start
 
 ```bash
-npm run dev              # 同时启动前端 (5173) + 后端 (3001)
+npm run dev              # 同时启动前端 (3002) + 后端 (3001)
 npm run dev:server       # 仅后端 (watch)
 npm run dev:frontend     # 仅前端 (Vite HMR)
 npm run build            # 构建前端 → frontend/dist/

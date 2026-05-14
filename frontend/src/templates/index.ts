@@ -8,3 +8,7 @@ import { zhType } from './zh-type';
 import { neoMinimal } from './neo-minimal';
 
 export const templates: TemplateDef[] = [minimal, badges, enterprise, cards, showcase, zhType, neoMinimal];
+
+export function getTemplate(id: string): TemplateDef | undefined {
+  return templates.find((t) => t.id === id);
+}

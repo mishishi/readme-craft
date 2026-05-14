@@ -2,7 +2,6 @@ import { useRef, useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { fetchRepoInfo } from '../services/github';
 import { templates } from '../templates';
-import { TemplatePreview } from './TemplateSelector';
 import { CompactSkeleton } from './TemplateSkeleton';
 import { trackEvent } from '../services/tracking';
 
@@ -144,7 +143,7 @@ export default function ShowcaseSection() {
                     </span>
                   </div>
                   <div className="mt-2 flex-1 overflow-hidden rounded-md">
-                    <TemplatePreview id={item.template} />
+                    <template.Preview />
                   </div>
                 </div>
               )}

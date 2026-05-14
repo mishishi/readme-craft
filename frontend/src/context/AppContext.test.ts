@@ -181,7 +181,7 @@ describe('appReducer', () => {
     });
 
     it('FETCH_REPO_SUCCESS sets repo info and stops loading', () => {
-      const repoInfo = { name: 'test', fullName: 'u/test', description: 'desc', language: 'TS', stars: 10, topics: [], owner: 'u', license: 'MIT', htmlUrl: 'https://github.com/u/test', defaultBranch: 'main' };
+      const repoInfo = { name: 'test', fullName: 'u/test', description: 'desc', language: 'TS', stars: 10, forks: 0, topics: [], owner: 'u', license: 'MIT', htmlUrl: 'https://github.com/u/test', defaultBranch: 'main' };
       const next = appReducer(
         { ...initialState, repoLoading: true },
         { type: 'FETCH_REPO_SUCCESS', payload: repoInfo }

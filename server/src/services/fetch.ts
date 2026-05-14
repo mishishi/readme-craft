@@ -9,7 +9,8 @@ const proxyDispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
  */
 export async function proxiedFetch(url: string, options?: RequestInit): Promise<Response> {
   if (proxyDispatcher) {
-    return undiciFetch(url, { ...options, dispatcher: proxyDispatcher });
+    // ProxyAgent 仅 undici 支持；undici 类型与全局 fetch 不完全兼容，用 as 断言
+    return undiciFetch(url, { ...(options as any), dispatcher: proxyDispatcher }) as Promise<Response>;
   }
-  return undiciFetch(url, options);
+  return fetch(url, options);
 }

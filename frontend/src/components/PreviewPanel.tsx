@@ -109,6 +109,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
       .map((s) => ({ id: slugify(s.heading), heading: s.heading }));
   }, [state.sections]);
 
+
   // Debounced scroll preview to match active section (用索引精确匹配)
   useEffect(() => {
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);

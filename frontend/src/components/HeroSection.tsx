@@ -1,30 +1,30 @@
 export default function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-primary-50/60">
+    <div className="relative overflow-hidden bg-gradient-to-b from-brand-50/60">
       {/* 装饰发光圆点 */}
-      <div className="glow-dot -left-36 -top-20 bg-primary-400" />
-      <div className="glow-dot -bottom-32 -right-36 bg-primary-300" />
+      <div className="glow-dot -left-36 -top-20 bg-brand-400" />
+      <div className="glow-dot -bottom-32 -right-36 bg-brand-300" />
 
-      <div className="relative mx-auto max-w-3xl px-4 pt-12 pb-8 text-center">
+      <div className="relative mx-auto max-w-5xl px-4 pt-12 pb-8 text-center">
         {/* 标签 */}
         <div className="animate-fade-in-up">
           <span className="badge">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
             AI 驱动的 README 生成器
           </span>
         </div>
 
         {/* 标题 */}
-        <h1 className="mt-6 animate-fade-in-up-delay-1 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-          <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+        <h1 className="mt-6 animate-fade-in-up-delay-1 font-display text-4xl font-display leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+          <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
             AI 生成中文 README
           </span>
         </h1>
-        <p className="mx-auto mt-4 max-w-xl animate-fade-in-up-delay-1 text-base leading-relaxed text-muted-500 sm:text-lg">
+        <p className="mx-auto mt-4 max-w-xl animate-fade-in-up-delay-1 text-base leading-relaxed text-neutral-500 sm:text-lg">
           输入仓库地址 · 选择模板 · 一分钟出稿
         </p>
 
-        {/* 特性卡片 */}
+        {/* 特性卡片 — 4 等大网格 */}
         <div className="mt-10 grid animate-fade-in-up-delay-2 grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {[
             {
@@ -67,13 +67,13 @@ export default function HeroSection() {
           ].map((f) => (
             <div
               key={f.title}
-              className="group rounded-card border border-muted-200 bg-white p-4 text-left shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-muted-300 hover:shadow-card-hover"
+              className="group rounded-card border border-neutral-200 bg-white p-4 text-left shadow-elevated transition-all duration-normal hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-floating"
             >
-              <div className="mb-3 inline-flex rounded-button bg-primary-50 p-2 text-primary-600 ring-1 ring-primary-200/60 ring-inset transition-colors group-hover:bg-primary-100 group-hover:ring-primary-300">
+              <div className="mb-3 inline-flex rounded-button bg-brand-50 p-2 text-brand-600 ring-1 ring-brand-200/60 ring-inset transition-colors group-hover:bg-brand-100 group-hover:ring-brand-300">
                 {f.icon}
               </div>
-              <h3 className="text-sm font-semibold text-muted-900">{f.title}</h3>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted-400">{f.desc}</p>
+              <h3 className="text-sm font-heading font-semibold text-neutral-900">{f.title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-400">{f.desc}</p>
             </div>
           ))}
         </div>

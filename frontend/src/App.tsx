@@ -1,107 +1,32 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import RepoInput from './components/RepoInput';
-import RepoInfoCard from './components/RepoInfoCard';
-import TemplateSelector from './components/TemplateSelector';
-import GenerateSection from './components/GenerateSection';
-import ShowcaseSection from './components/ShowcaseSection';
-import ConfirmBackModal from './components/ConfirmBackModal';
-import EditWorkspace from './components/EditWorkspace';
-import GitHubTokenWarning from './components/GitHubTokenWarning';
-import StepIndicator from './components/StepIndicator';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import AdminLayout from './components/AdminLayout';
 import { trackEvent } from './services/tracking';
 import ToastContainer from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import SkipLink from './components/SkipLink';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const EditorPage = lazy(() => import('./pages/EditorPage'));
+const AdminLayout = lazy(() => import('./components/AdminLayout'));
+
+function PageSkeleton() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+        <span className="text-sm text-muted-400">加载中…</span>
+      </div>
+    </div>
+  );
+}
 
 /** 路由守卫：/editor 需要已有内容 */
 function RequireContent({ children }: { children: React.ReactNode }) {
   const { state } = useApp();
   if (state.sections.length === 0 && !state.title) return <Navigate to="/" replace />;
   return <>{children}</>;
-}
-
-function HomePage() {
-  const { state } = useApp();
-  return (
-    <section>
-      <HeroSection />
-      <ShowcaseSection />
-      <div className="mx-auto mt-6 max-w-2xl">
-        <RepoInput disabled={false} />
-          <GitHubTokenWarning />
-          <RepoInfoCard />
-      </div>
-
-      {/* 选模板：仅当仓库信息加载后展示，减少首屏认知负荷 */}
-      <div className={state.repoInfo ? 'animate-fade-in-up' : 'hidden'}>
-        <TemplateSelector />
-      </div>
-
-      <StepIndicator />
-
-      <GenerateSection />
-    </section>
-  );
-}
-
-function EditorPage() {
-  const { state, dispatch } = useApp();
-  const navigate = useNavigate();
-  const [showBackConfirm, setShowBackConfirm] = useState(false);
-
-  const handleBack = () => {
-    const hasContent = state.sections.some(s => s.content.trim());
-    if (hasContent) {
-      setShowBackConfirm(true);
-    } else {
-      dispatch({ type: 'CLEAR_CONTENT' });
-      navigate('/');
-    }
-  };
-
-  const confirmBack = () => {
-    dispatch({ type: 'CLEAR_CONTENT' });
-    setShowBackConfirm(false);
-    navigate('/');
-  };
-
-  return (
-    <section>
-      <div className="mb-6 text-center">
-        <div className="flex items-center justify-center gap-3">
-          <h2 className="text-lg font-semibold text-muted-900">编辑 & 预览</h2>
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1 text-xs text-muted-500 transition-colors hover:text-muted-600"
-          >
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            返回首页
-          </button>
-        </div>
-        <p className="mt-1 text-sm text-muted-500">
-          调整标题和章节内容，右侧实时预览效果
-        </p>
-      </div>
-
-      <StepIndicator />
-
-      <EditWorkspace />
-
-      <ConfirmBackModal
-        open={showBackConfirm}
-        onClose={() => setShowBackConfirm(false)}
-        onConfirm={confirmBack}
-      />
-    </section>
-  );
 }
 
 function AppRoutes() {
@@ -147,26 +72,28 @@ function AppRoutes() {
   const isAdmin = location.pathname.startsWith('/admin');
   const isEditor = location.pathname === '/editor';
 
+  const fallback = <PageSkeleton />;
+
   return (
     <div className="flex min-h-screen flex-col">
       <SkipLink />
       {!isAdmin && <Header />}
 
-      <main id="main-content" className={`mx-auto w-full flex-1 px-4 pb-12 pt-6 ${isAdmin ? 'max-w-6xl' : 'max-w-7xl'}`}>
+      <main id="main-content" className={`relative mx-auto w-full flex-1 bg-white px-4 pb-12 pt-6 ${isAdmin ? 'max-w-6xl' : 'max-w-7xl'}`}>
         <ErrorBoundary>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Suspense fallback={fallback}><HomePage /></Suspense>} />
             <Route
               path="/editor"
               element={
                 <RequireContent>
-                  <EditorPage />
+                  <Suspense fallback={fallback}><EditorPage /></Suspense>
                 </RequireContent>
               }
             />
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<Suspense fallback={fallback}><AdminLayout /></Suspense>}>
               <Route index element={<Navigate to="/admin/analytics" replace />} />
-              <Route path="analytics" element={<AnalyticsDashboard />} />
+              <Route path="analytics" element={<Suspense fallback={fallback}><AdminAnalytics /></Suspense>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -197,6 +124,8 @@ function AppRoutes() {
     </div>
   );
 }
+
+const AdminAnalytics = lazy(() => import('./components/AnalyticsDashboard'));
 
 export default function App() {
   return (

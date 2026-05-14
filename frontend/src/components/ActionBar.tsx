@@ -71,15 +71,16 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
 
   return (
     <div className="flex items-center gap-2">
-      {/* 新建 — 清空当前内容并回到首页 */}
+      {/* 新建 — 重置所有状态回到首页 */}
       <button
         onClick={() => {
-          dispatch({ type: 'CLEAR_CONTENT' });
+          dispatch({ type: 'RESET' });
+          dispatch({ type: 'SHOW_TOAST', payload: { message: '已重置所有状态', type: 'success' } });
           navigate('/');
         }}
         className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
-        title="新建 README"
-        aria-label="新建 README"
+        title="重新开始 README"
+        aria-label="重新开始 README"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l-6.75-6.75M12 19.5l6.75-6.75" />
@@ -114,7 +115,7 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
       <button
         onClick={handleCopy}
         disabled={copying}
-        className="btn-secondary text-sm min-w-[4.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
+        className="btn-primary min-w-[7.5rem] px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
         title="复制到剪贴板"
       >
         {copying ? (
@@ -127,30 +128,12 @@ export default function ActionBar({ pulseDownload }: ActionBarProps = {}) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
           </svg>
         )}
-        复制
-      </button>
-      <button
-        onClick={() => {
-          const projectName = state.title || state.repoInfo?.name || '我的项目';
-          const text = `我刚用 ReadMeCraft 为 ${projectName} 生成了一个 README！\n\n立即体验：https://readme-craft.com`;
-          navigator.clipboard.writeText(text);
-          dispatch({
-            type: 'SHOW_TOAST',
-            payload: { message: '分享文本已复制到剪贴板', type: 'success' },
-          });
-        }}
-        className="btn-secondary px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0"
-        title="分享 README"
-        aria-label="分享 README"
-      >
-        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-        </svg>
+        <span>复制</span>
       </button>
       <button
         onClick={handleDownload}
         data-shortcut="download"
-        className={`btn-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0 ${pulseDownload ? 'animate-pulse ring-2 ring-primary-400' : ''}`}
+        className={`btn-primary min-w-[7.5rem] px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 min-h-[44px] sm:min-h-0 ${pulseDownload ? 'animate-pulse ring-2 ring-primary-400' : ''}`}
         title="下载 README（Ctrl+S）"
       >
         <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

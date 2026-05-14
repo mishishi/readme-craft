@@ -11,23 +11,23 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
       return (
         <div className="w-full overflow-hidden rounded-md font-sans leading-relaxed">
           <div className="p-2 text-[10px] text-muted-700">
-          <div className="mb-1 text-xs font-bold text-muted-900">chalk</div>
+          <div className="mb-1 text-xs font-bold text-muted-900">Project Name</div>
           <p className="mb-1.5 text-[9px] leading-relaxed text-muted-500">
-            Terminal string styling with expressive API, zero dependencies.
+            Short description of what this project does and why it matters.
           </p>
           <div className="mb-1.5 text-[9px] text-muted-600">
             <span className="font-medium text-muted-700">Features</span>
           </div>
           <ul className="mb-1.5 list-inside list-disc space-y-[2px] text-[9px] text-muted-600">
-            <li>Lightweight and fast</li>
-            <li>Chainable API</li>
-            <li>256-color support</li>
+            <li>Fast and lightweight</li>
+            <li>Easy to use API</li>
+            <li>Cross-platform support</li>
           </ul>
           <div className="rounded bg-muted-100 p-1.5 font-mono text-[8px] text-muted-700">
-            npm install chalk
+            npm install project-name
           </div>
           <div className="mt-1.5 border-t border-muted-100 pt-1 text-[8px] text-muted-400">
-            MIT © sindresorhus
+            MIT © author
           </div>
         </div>
       </div>
@@ -105,14 +105,14 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
         <div className="w-full overflow-hidden rounded-md">
           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-2">
           <div className="mb-1 flex items-center gap-1">
-            <span className="text-[11px] font-bold text-muted-800">Chalk — 颜色工具</span>
+            <span className="text-[11px] font-bold text-muted-800">Package — 工具名称</span>
           </div>
           <div className="mb-1 rounded border-l-2 border-emerald-400 bg-white px-2 py-1.5 shadow-sm">
             <div className="flex items-center gap-1 text-[9px] font-medium text-emerald-700">
               Highlights
             </div>
             <p className="mt-[2px] text-[8px] text-muted-500 leading-relaxed">
-              Expressive API with chainable methods for terminal colors.
+              Clean API with modern toolchain integration.
             </p>
           </div>
           <div className="mb-1 rounded border-l-2 border-teal-400 bg-white px-2 py-1.5 shadow-sm">
@@ -120,7 +120,7 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
               Features
             </div>
             <p className="mt-[2px] text-[8px] text-muted-500 leading-relaxed">
-              Supports 256 colors, true color, and nested styles.
+              Fully typed, well-tested, and actively maintained.
             </p>
           </div>
           <div className="text-[8px] text-muted-600">
@@ -140,34 +140,34 @@ export function TemplatePreview({ id }: { id: string; accent?: string }) {
           {/* Banner 条 */}
           <div className="flex h-10 items-center justify-center bg-gradient-to-r from-primary-600 to-primary-500 px-3">
             <span className="text-[9px] font-semibold tracking-wider text-white/80">
-              CHALK — Terminal Colors
+              PROJECT — Short Tagline
             </span>
           </div>
           {/* 内容 */}
           <div className="bg-white p-3">
             <p className="mb-1.5 text-[9px] leading-relaxed text-muted-600">
-              Chalk started as a small experiment to bring expressive colors to Node.js terminals. What began as a weekend project grew into one of the most beloved npm packages.
+              This project started as a small idea and grew into something much bigger. Designed for modern workflows and developer experience.
             </p>
             {/* 路线图 */}
             <div className="mb-1.5 space-y-[2px] text-[8px]">
               <div className="text-muted-400">
                 <span className="mr-1 inline-block h-3 w-3 rounded border border-muted-300 align-middle" />
-                V3 plugin system
+                Roadmap item one
               </div>
               <div className="text-muted-400">
                 <span className="mr-1 inline-block h-3 w-3 rounded border border-muted-300 align-middle" />
-                WebAssembly port
+                Roadmap item two
               </div>
               <div className="text-emerald-600">
                 <svg className="mr-0.5 inline-block h-3 w-3 align-middle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                ESM support
+                Shipped feature
               </div>
             </div>
             {/* 结束语 */}
             <div className="border-t border-muted-100 pt-1 text-[8px] italic text-muted-400">
-              "Color your terminal, color your code."
+              "Build something great."
             </div>
           </div>
         </div>
@@ -205,14 +205,14 @@ export default function TemplateSelector() {
               }
               trackEvent('template_selected', { templateId: t.id, templateName: t.name });
             }}
-            className={`group relative flex flex-col p-0 text-left transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
+            className={`group relative flex flex-col p-0 text-left cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
               selected ? 'animate-[scale-up_200ms_ease-out]' : ''
             }`}
           >
           <div className={`flex flex-1 flex-col rounded-card border-2 relative ${
             selected
               ? 'border-primary-500 bg-primary-50 shadow-md ring-1 ring-primary-500/20'
-              : 'border-muted-200 bg-white hover:border-muted-300 hover:shadow-sm'
+              : 'border-muted-200 bg-white hover:border-primary-300 hover:shadow-lg hover:ring-1 hover:ring-primary-200'
           }`}>
             {/* 预览区域 */}
             <div className={`flex flex-1 flex-col rounded-t-[16px] bg-gradient-to-br ${t.preview.gradient} p-4 pb-3`}>

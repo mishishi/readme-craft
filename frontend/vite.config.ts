@@ -16,6 +16,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-editor': ['react-syntax-highlighter', 'react-markdown', 'rehype-raw', 'rehype-sanitize', 'remark-gfm'],
+          'vendor-admin': ['recharts'],
+        },
+      },
+    },
   },
   test: {
     include: ['src/**/*.test.{ts,tsx}'],

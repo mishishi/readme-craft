@@ -130,7 +130,7 @@ export default function ShowcaseSection() {
               tabIndex={-1}
               onClick={() => handleSelect(item)}
               disabled={isLoading}
-              className="flex flex-col w-56 shrink-0 snap-start rounded-card border border-muted-200 bg-white text-left shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-lg hover:ring-1 hover:ring-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-wait disabled:opacity-70"
+              className="flex flex-col w-56 shrink-0 snap-start rounded-card border border-muted-200 bg-white text-left shadow-sm transition-all duration-200 cursor-pointer hover:border-primary-300 hover:shadow-lg hover:ring-1 hover:ring-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-wait disabled:opacity-70"
             >
               {/* 模板预览 — 渐变背景 + icon + 模板名称 + TemplatePreview */}
               {isLoading ? (

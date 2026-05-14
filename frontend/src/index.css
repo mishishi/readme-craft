@@ -3,61 +3,165 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* === 品牌色: 靛青混合 (indigo-500 based) === */
+    --color-brand-50:  #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-200: #c7d2fe;
+    --color-brand-300: #a5b4fc;
+    --color-brand-400: #818cf8;
+    --color-brand-500: #6366f1;
+    --color-brand-600: #4f46e5;
+    --color-brand-700: #4338ca;
+    --color-brand-800: #312e81;
+    --color-brand-900: #1e1b4b;
+
+    /* === 强调色 (Accent) — 琥珀金 === */
+    --color-accent-50:  #fffbeb;
+    --color-accent-100: #fef3c7;
+    --color-accent-200: #fde68a;
+    --color-accent-300: #fcd34d;
+    --color-accent-400: #fbbf24;
+    --color-accent-500: #f59e0b;
+    --color-accent-600: #d97706;
+    --color-accent-700: #b45309;
+    --color-accent-800: #92400e;
+    --color-accent-900: #78350f;
+
+    /* === 中性色 — 暖灰 (Warm Gray) === */
+    --color-neutral-50:  #fafaf9;
+    --color-neutral-100: #f5f5f4;
+    --color-neutral-200: #e7e5e4;
+    --color-neutral-300: #d6d3d1;
+    --color-neutral-400: #a8a29e;
+    --color-neutral-500: #78716c;
+    --color-neutral-600: #57534e;
+    --color-neutral-700: #44403c;
+    --color-neutral-800: #292524;
+    --color-neutral-900: #1c1917;
+
+    /* === 语义色 === */
+    --color-success-50:  #ecfdf5;
+    --color-success-500: #10b981;
+    --color-success-600: #059669;
+
+    --color-warning-50:  #fffbeb;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #d97706;
+
+    --color-error-50:    #fff1f2;
+    --color-error-500:   #f43f5e;
+    --color-error-600:   #e11d48;
+
+    --color-info-50:     #eff6ff;
+    --color-info-500:    #3b82f6;
+    --color-info-600:    #2563eb;
+
+    /* === CTA 色 (Call-to-Action) — 橙 === */
+    --color-cta-50:  #fff7ed;
+    --color-cta-100: #ffedd5;
+    --color-cta-200: #fed7aa;
+    --color-cta-300: #fdba74;
+    --color-cta-400: #fb923c;
+    --color-cta-500: #f97316;
+    --color-cta-600: #ea580c;
+    --color-cta-700: #c2410c;
+    --color-cta-800: #9a3412;
+    --color-cta-900: #7c2d12;
+
+    /* === 图表色 (Chart) === */
+    --color-chart-1: #6366f1;
+    --color-chart-2: #f59e0b;
+    --color-chart-3: #10b981;
+    --color-chart-4: #8b5cf6;
+    --color-chart-5: #f97316;
+
+    /* === 字体栈 === */
+    --font-display: 'Playfair Display', 'Noto Serif SC', serif;
+    --font-heading: 'Fraunces', 'Noto Serif SC', serif;
+    --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+    /* === 阴影层级 === */
+    --shadow-emboss: 0 0 0 0.5px rgba(0,0,0,0.04), inset 0 0.5px 0 rgba(255,255,255,0.6);
+    --shadow-elevated: 0 4px 8px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.02);
+    --shadow-floating: 0 12px 24px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.02);
+    --shadow-modal: 0 32px 64px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04);
+
+    /* === 圆角 === */
+    --radius-card: 16px;
+    --radius-button: 10px;
+    --radius-input: 10px;
+    --radius-dialog: 16px;
+    --radius-badge: 9999px;
+    --radius-tag: 6px;
+
+    /* === 动效 === */
+    --duration-micro: 150ms;
+    --duration-normal: 200ms;
+    --duration-page: 300ms;
+    --duration-entrance: 500ms;
+
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply min-h-screen bg-muted-50 text-muted-900 antialiased;
+    @apply min-h-screen bg-neutral-50 text-neutral-900 antialiased;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button bg-primary-600 px-5 py-2.5 text-sm font-medium text-white
-           shadow-button transition-all duration-200 hover:bg-primary-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button bg-brand-600 px-5 py-2.5 text-sm font-medium text-white
+           shadow-button transition-all duration-normal hover:bg-brand-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
            disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button border border-muted-300 bg-white px-5 py-2.5 text-sm font-medium text-muted-700
-           shadow-button transition-all duration-200 hover:bg-muted-50 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-700
+           shadow-button transition-all duration-normal hover:bg-neutral-50 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
            disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-ghost {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button px-3 py-1.5 text-sm font-medium text-muted-500
-           transition-colors duration-200 hover:bg-muted-100 hover:text-muted-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-button px-3 py-1.5 text-sm font-medium text-neutral-500
+           transition-colors duration-normal hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
   }
 
   .input-field {
-    @apply block w-full rounded-input border border-muted-300 bg-white px-4 py-2.5 text-sm text-muted-900
-           placeholder-muted-400 transition-colors duration-200
-           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+    @apply block w-full rounded-input border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900
+           placeholder-neutral-400 transition-colors duration-normal
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-20;
   }
 
   .card {
-    @apply rounded-card border border-muted-200 bg-white p-6 shadow-card transition-shadow duration-200 hover:shadow-card-hover;
+    @apply rounded-card border border-neutral-200 bg-white p-6 shadow-elevated transition-shadow duration-normal hover:shadow-floating;
   }
 
   .card-hover {
-    @apply transition-shadow duration-200 hover:shadow-card-hover;
+    @apply transition-shadow duration-normal hover:shadow-floating;
   }
 
   .dialog {
-    @apply rounded-dialog bg-white p-6 shadow-dialog;
+    @apply rounded-dialog bg-white p-6 shadow-modal;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-medium text-primary-600;
+    @apply inline-flex items-center gap-1.5 rounded-badge border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600;
   }
 }
 
 /* 网格背景 */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
@@ -118,11 +222,11 @@
   display: none;
 }
 
-/* Toast 语义色 — 基于设计系统 */
-.toast-success { background-color: #059669; }
-.toast-error { background-color: #dc2626; }
-.toast-warning { background-color: #d97706; }
-.toast-info { background-color: #2563eb; }
+/* Toast 语义色 — 通过状态 CSS 变量引用 */
+.toast-success { background-color: var(--color-success-600); }
+.toast-error { background-color: var(--color-error-600); }
+.toast-warning { background-color: var(--color-warning-600); }
+.toast-info { background-color: var(--color-info-600); }
 
 /* prefers-reduced-motion 无障碍 */
 @media (prefers-reduced-motion: reduce) {

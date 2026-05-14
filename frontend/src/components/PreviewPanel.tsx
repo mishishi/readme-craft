@@ -204,6 +204,17 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
               code: ({ className, children, ...props }) => {
                 const match = /language-(\w+)/.exec(className || '');
                 if (!match) {
+                  const codeStr = String(children).replace(/\n$/, '');
+                  // 无语言标签的多行代码块（如目录树）需要用 pre 包裹保留换行
+                  if (codeStr.includes('\n')) {
+                    return (
+                      <pre className="!rounded-lg !bg-muted-900 !p-4 !text-sm !text-muted-100 !overflow-x-auto">
+                        <code className="!bg-transparent !p-0 !text-inherit !font-normal !whitespace-pre-wrap">
+                          {codeStr}
+                        </code>
+                      </pre>
+                    );
+                  }
                   return (
                     <code className="!rounded !bg-muted-100 !px-1.5 !py-0.5 !text-sm !text-muted-800">
                       {children}

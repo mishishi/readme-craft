@@ -1,21 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { generateReadme } from '../services/minimax.js';
-import { buildSystemPrompt, buildUserPrompt } from '../services/prompts.js';
+import { buildUserPrompt } from '../services/prompts.js';
+import { buildSystemPrompt } from '../services/templates/index.js';
 import { scanProject } from '../services/project-scanner.js';
 
 // [validate-retry] 暂注释，后续优化重开
 // import { trackEvent } from '../services/analytics.js';
-// import {
-//   validateOutput,
-//   buildRefinePrompt,
-//   checkCoverage,
-//   minimalRules,
-//   badgesRules,
-//   enterpriseRules,
-//   cardsRules,
-//   showcaseRules,
-// } from '../services/template-skeletons/index.js';
-// import type { TemplateValidationRules } from '../services/template-skeletons/index.js';
+// import { validateOutput, buildRefinePrompt, checkCoverage } from '../services/templates/index.js';
+// import type { TemplateValidationRules } from '../services/templates/index.js';
 
 /** 清理 MiniMax 返回：去掉可能包裹的 markdown 代码块标记 */
 function cleanMarkdown(raw: string): string {
@@ -38,14 +30,11 @@ function computeTemperature(seed?: number): number {
   return 1.0 + (seed % 3) * 0.1;
 }
 
-// [validate-retry] VALIDATION_RULES — 暂注释
-// const VALIDATION_RULES: Record<string, TemplateValidationRules> = {
-//   minimal: minimalRules,
-//   badges: badgesRules,
-//   enterprise: enterpriseRules,
-//   cards: cardsRules,
-//   showcase: showcaseRules,
-// };
+// [validate-retry] VALIDATION_RULES — after refactoring, use TEMPLATES[id].rules
+// import { TEMPLATES } from '../services/templates/index.js';
+// const VALIDATION_RULES: Record<string, TemplateValidationRules> = Object.fromEntries(
+//   Object.entries(TEMPLATES).map(([id, cfg]) => [id, cfg.rules])
+// );
 
 interface GenerateBody {
   repoUrl: string;
@@ -159,7 +148,8 @@ export async function generateRoutes(app: FastifyInstance) {
           const entriesToDelete = generateCache.size - MAX_CACHE_SIZE + 1;
           const iterator = generateCache.keys();
           for (let i = 0; i < entriesToDelete; i++) {
-            generateCache.delete(iterator.next().value);
+            const key = iterator.next().value;
+            if (key !== undefined) generateCache.delete(key);
           }
         }
         const cacheKey = getGenerateCacheKey(repoInfo.owner, repoInfo.name, templateId);

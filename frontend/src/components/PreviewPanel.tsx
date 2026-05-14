@@ -271,7 +271,7 @@ export default function PreviewPanel({ feedbackCard }: PreviewPanelProps) {
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-24 right-6 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-muted-200 bg-white text-muted-500 shadow-lg transition-all hover:bg-muted-50 hover:text-primary-600 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+          className="fixed bottom-24 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-muted-200 bg-white text-muted-500 shadow-lg transition-all hover:bg-muted-50 hover:text-primary-600 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
           title="回到顶部"
           aria-label="回到顶部"
         >

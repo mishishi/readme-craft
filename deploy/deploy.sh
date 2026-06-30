@@ -110,45 +110,20 @@ echo "==> [6/6] Nginx 配置"
 if [[ "$UPDATE_NGINX" == "true" ]]; then
   echo "    生成 nginx 配置: $NGINX_SITE_PATH"
 
-  # 写入 nginx site 配置
-  sudo tee "$NGINX_SITE_PATH" > /dev/null << 'NGINX_EOF'
-server {
-    listen 443 ssl;
-    server_name {{DOMAINS}};
+  # 从模板文件读取（与 deploy.sh 同目录）
+  NGINX_TEMPLATE="$SCRIPT_DIR/nginx.conf"
+  if [[ ! -f "$NGINX_TEMPLATE" ]]; then
+    echo "    错误: nginx 模板不存在: $NGINX_TEMPLATE"
+    exit 1
+  fi
 
-    ssl_certificate {{SSL_CERT}};
-    ssl_certificate_key {{SSL_CERT_KEY}};
-
-    root {{DEPLOY_PATH}}/frontend/dist;
-    index index.html;
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /api/admin {
-        proxy_pass http://127.0.0.1:3002;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-NGINX_EOF
-
-  # 替换变量
-  sudo sed -i "s|{{DOMAINS}}|${DOMAINS}|g" "$NGINX_SITE_PATH"
-  sudo sed -i "s|{{SSL_CERT}}|${SSL_CERT}|g" "$NGINX_SITE_PATH"
-  sudo sed -i "s|{{SSL_CERT_KEY}}|${SSL_CERT_KEY}|g" "$NGINX_SITE_PATH"
-  sudo sed -i "s|{{DEPLOY_PATH}}|${DEPLOY_PATH}|g" "$NGINX_SITE_PATH"
+  # 替换变量后写入 sites-enabled
+  sed -e "s|{{DOMAINS}}|${DOMAINS}|g" \
+      -e "s|{{SSL_CERT}}|${SSL_CERT}|g" \
+      -e "s|{{SSL_CERT_KEY}}|${SSL_CERT_KEY}|g" \
+      -e "s|{{DEPLOY_PATH}}|${DEPLOY_PATH}|g" \
+      -e "s|{{BACKEND_PORT}}|${BACKEND_PORT:-3001}|g" \
+      "$NGINX_TEMPLATE" | sudo tee "$NGINX_SITE_PATH" > /dev/null
 
   echo "    测试 & 重载 nginx"
   sudo nginx -t && sudo nginx -s reload

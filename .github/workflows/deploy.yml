@@ -43,6 +43,7 @@ jobs:
             sed -i 's|^GITHUB_CLIENT_ID=.*|GITHUB_CLIENT_ID=${{ vars.PROD_CLIENT_ID }}|' server/.env
             sed -i 's|^GITHUB_CLIENT_SECRET=.*|GITHUB_CLIENT_SECRET=${{ vars.PROD_CLIENT_SECRET }}|' server/.env
             sed -i 's|FRONTEND_URL=.*|FRONTEND_URL=https://openginko.tech|' server/.env
+            sed -i 's|^OAUTH_CALLBACK_URL=.*|OAUTH_CALLBACK_URL=https://openginko.tech/api/auth/github/callback|' server/.env
 
             # 重启 PM2
             pm2 restart readme-craft-api || pm2 start server/dist/index.js --name readme-craft-api

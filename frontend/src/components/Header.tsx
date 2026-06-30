@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -46,6 +47,9 @@ export default function Header() {
     if (!userMenuOpen) return;
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        // Also check if click is inside the portal dropdown
+        const portalEl = document.querySelector('[data-user-dropdown]');
+        if (portalEl && portalEl.contains(e.target as Node)) return;
         setUserMenuOpen(false);
       }
     };
@@ -116,8 +120,16 @@ export default function Header() {
                   </svg>
                 </button>
 
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full z-dropdown mt-1.5 w-44 overflow-hidden rounded-card border border-neutral-200 bg-white shadow-elevated-lg !bg-white">
+                {userMenuOpen && createPortal(
+                  <div
+                    data-user-dropdown
+                    className="fixed z-[9999] w-44 overflow-hidden rounded-card border border-neutral-200 bg-white shadow-elevated-lg"
+                    style={{
+                      right: `${window.innerWidth - (userMenuRef.current?.getBoundingClientRect().right ?? 0)}px`,
+                      top: `${(userMenuRef.current?.getBoundingClientRect().bottom ?? 0) + 6}px`,
+                    }}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
                     <div className="border-b border-neutral-100 px-3 py-2">
                       <p className="truncate text-xs font-medium text-neutral-900">{user.name || user.login}</p>
                       {user.email && <p className="truncate text-[11px] text-neutral-400">{user.email}</p>}
@@ -131,7 +143,8 @@ export default function Header() {
                       </svg>
                       退出登录
                     </button>
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
             ) : (

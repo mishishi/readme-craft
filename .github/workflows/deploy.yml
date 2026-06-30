@@ -39,9 +39,9 @@ jobs:
             # 后端依赖
             cd server && npm install --silent && cd ..
 
-            # 替换生产环境 OAuth 变量
-            sed -i 's|^GITHUB_CLIENT_ID=.*|GITHUB_CLIENT_ID=Ov23lizSkefaYoZMyyYM|' server/.env
-            sed -i 's|^GITHUB_CLIENT_SECRET=.*|GITHUB_CLIENT_SECRET=a13e33b5a27a3fbcd5faf8b4569cc3e00b40bc78|' server/.env
+            # 使用 Repository Variables 注入生产 OAuth 凭证
+            sed -i 's|^GITHUB_CLIENT_ID=.*|GITHUB_CLIENT_ID=${{ vars.PROD_CLIENT_ID }}|' server/.env
+            sed -i 's|^GITHUB_CLIENT_SECRET=.*|GITHUB_CLIENT_SECRET=${{ vars.PROD_CLIENT_SECRET }}|' server/.env
             sed -i 's|FRONTEND_URL=.*|FRONTEND_URL=https://openginko.tech|' server/.env
 
             # 重启 PM2

@@ -39,6 +39,10 @@ jobs:
             # 后端依赖
             cd server && npm install --silent && cd ..
 
+            # 替换生产环境 OAuth 变量
+            sed -i 's|OAUTH_CALLBACK_URL=.*|OAUTH_CALLBACK_URL=https://openginko.tech/api/auth/github/callback|' server/.env
+            sed -i 's|FRONTEND_URL=.*|FRONTEND_URL=https://openginko.tech|' server/.env
+
             # 重启 PM2
             pm2 restart readme-craft-api || pm2 start server/dist/index.js --name readme-craft-api
 

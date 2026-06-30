@@ -117,7 +117,7 @@ export default function Header() {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full z-dropdown mt-1.5 w-44 overflow-hidden rounded-card border border-neutral-200 bg-white shadow-elevated-lg">
+                  <div className="absolute right-0 top-full z-dropdown mt-1.5 w-44 overflow-hidden rounded-card border border-neutral-200 bg-white shadow-elevated-lg !bg-white">
                     <div className="border-b border-neutral-100 px-3 py-2">
                       <p className="truncate text-xs font-medium text-neutral-900">{user.name || user.login}</p>
                       {user.email && <p className="truncate text-[11px] text-neutral-400">{user.email}</p>}
